@@ -1,4 +1,8 @@
-# Basic .gitattributes for a python repo.
+# Documentation
+# =============
+*.txt     text eol=lf
+
+* text=auto eol=lf
 
 # Source files
 # ============
@@ -19,10 +23,6 @@
 *.pyc    binary export-ignore
 *.pyo    binary export-ignore
 *.pyd    binary
-
-# Documentation
-# =============
-[text] eol=lf   # Normalized to LF # Convert to LF
 
 # Docker
 # ======
