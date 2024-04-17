@@ -1,13 +1,64 @@
-version: "3.9"
-services:
-  frontend:
-    build: ./frontend
-    ports:
-      - 5000:5000
+name: microservices-db
 
+services:
   backend:
-    build: ./backend
+    container_name: microservices-backend
+    hostname: backend
+    build: 
+      context: ./src/backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
     ports:
-      - 8000:8000
+      - "127.0.0.1:8000:8000"
+    networks:
+      - host
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+      frontend:
+        condition: service_completed_successfully
+        required: false
+
+  frontend:
+    container_name: microservices-frontend
+    hostname: frontend
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile
+    env_file:
+      - ./.env
+    volumes:
+      - ./frontend:${MS_BASE_DIR}/frontend
+    command: ["bash", "-c", "npm install && exec npm run dev"]
+    ports:
+      - "127.0.0.1:8080:8080"
+    stop_signal: SIGKILL
+
+  db:
+    hostname: db  
+    build:
+        context: ./src/db
+        dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - host
+    volumes:
+      - ./config/db/postgresql.conf:/etc/postgresql/postgresql.conf
+      - db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${APP_DB_USER}
+      - POSTGRES_PASSWORD=${APP_DB_PASSWORD}
+      - POSTGRES_DB=${APP_DB_NAME}
+
+networks:
+  host: {}
+  
+volumes:
+  db-data: {}
