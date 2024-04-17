@@ -8,7 +8,5 @@ WORKDIR ${MS_BASE_DIR}/frontend
 # Copy the frontend source code to the working directory
 COPY . .
 
-COPY ../../.env ./
-
 # Command to run the Vite development server
 RUN npm install && npm run build

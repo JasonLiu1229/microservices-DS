@@ -5,7 +5,7 @@ FROM postgres:16.2-bookworm
 WORKDIR /app/db
 
 # Copy the SQL scripts to the working directory
-COPY database.sql database.sql
+COPY database.sql /docker-entrypoint-initdb.d/
 
 # Command to run the SQL scripts
-CMD ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+CMD ["postgres"]
