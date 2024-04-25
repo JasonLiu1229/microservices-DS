@@ -9,4 +9,4 @@ COPY /services /services
 
 RUN pip3 install -r requirements.txt
 
-CMD [ "python3", "-m" , "flask", "run", "--host=127.0.0.1 --port=8000 &", "--no-reload"]
+CMD [ "python3", "-m" , "flask", "run", "--host=127.0.0.1 --port=8000", "--no-reload"]
