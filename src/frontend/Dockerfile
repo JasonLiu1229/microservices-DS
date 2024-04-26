@@ -1,12 +1,8 @@
-# Use a base image with Node.js installed
-FROM node:21.7.1-bookworm
+# syntax=docker/dockerfile:1
+FROM python:3.12-rc-slim-buster
+COPY requirements.txt requirements.txt
+RUN pip3 install -r requirements.txt
+COPY app.py app.py
+COPY templates templates
 
-ARG MS_BASE_DIR=/ms
-
-WORKDIR ${MS_BASE_DIR}/frontend
-
-# Copy the frontend source code to the working directory
-COPY . .
-
-# Command to run the Vite development server
-RUN npm install && npm run build
+CMD [ "python3", "-m" , "flask", "run", "--host=0.0.0.0", "--port=8080"]
