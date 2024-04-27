@@ -47,6 +47,8 @@ services:
       - POSTGRES_USER=${APP_DB_USER}
       - POSTGRES_PASSWORD=${APP_DB_PASSWORD}
       - POSTGRES_DB=${APP_DB_NAME_USERS}
+      - POSTGRES_DB_HOST=${APP_DB_NAME}
+      - POSTGRES_DB_PORT=${APP_DB_PORT_USERS}
     ports:
       - "127.0.0.1:5437:5432"
     healthcheck:
@@ -70,6 +72,8 @@ services:
       - POSTGRES_USER=${APP_DB_USER}
       - POSTGRES_PASSWORD=${APP_DB_PASSWORD}
       - POSTGRES_DB=${APP_DB_NAME_EVENTS}
+      - POSTGRES_DB_HOST=${APP_DB_NAME}
+      - POSTGRES_DB_PORT=${APP_DB_PORT_EVENTS}
     ports:
       - "127.0.0.1:5433:5432"
     healthcheck:
@@ -93,6 +97,8 @@ services:
       - POSTGRES_USER=${APP_DB_USER}
       - POSTGRES_PASSWORD=${APP_DB_PASSWORD}
       - POSTGRES_DB=${APP_DB_NAME_INVITATIONS}
+      - POSTGRES_DB_HOST=${APP_DB_NAME}
+      - POSTGRES_DB_PORT=${APP_DB_PORT_INVITATIONS}
     ports:
       - "127.0.0.1:5434:5432"
     healthcheck:
@@ -116,6 +122,8 @@ services:
       - POSTGRES_USER=${APP_DB_USER}
       - POSTGRES_PASSWORD=${APP_DB_PASSWORD}
       - POSTGRES_DB=${APP_DB_NAME_PARTICIPATIONS}
+      - POSTGRES_DB_HOST=${APP_DB_NAME}
+      - POSTGRES_DB_PORT=${APP_DB_PORT_PARTICIPATIONS}
     ports:
       - "127.0.0.1:5435:5432"
     healthcheck:
@@ -139,6 +147,8 @@ services:
       - POSTGRES_USER=${APP_DB_USER}
       - POSTGRES_PASSWORD=${APP_DB_PASSWORD}
       - POSTGRES_DB=${APP_DB_NAME_CALENDAR_SHARES}
+      - POSTGRES_DB_HOST=${APP_DB_NAME}
+      - POSTGRES_DB_PORT=${APP_DB_PORT_CALENDAR_SHARES}
     ports:
       - "127.0.0.1:5436:5432"
     healthcheck:

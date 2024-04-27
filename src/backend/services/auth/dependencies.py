@@ -6,25 +6,31 @@ This module contains all the dependencies for the API, such as the security and 
 
 # Imports
 import datetime
+
+from exceptions import (
+    CREDENTIALS_EXECPTION,
+    EXPIRED_EXCEPTION,
+    INVALID_EXCEPTION_TOKEN,
+    NOT_FOUND_EXCEPTION_TOKEN,
+)
+
 from typing import Annotated, Any
 
 import bcrypt
 import jwt
-from fastapi import Depends, HTTPException, Security, status
+from fastapi import Depends, Security
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
 
-from wrapper import UserModel, find_user, get_all_users, get_token
+from wrapper import find_user, get_token, get_users, UserModel
 
 
 # Constants
 # openssl rand -hex 32
-SECRET_KEY = "f3c141d132a72394ff1a30d814c71216b6b8a5cc581fb233297e4ef3a8dcf7ad"
+SECRET_KEY = "de64ecaae7dce6487be8fba54b71749449dd76638e2784b49e7bf31757307052"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
 LOWEST_ROLE = "default"
-
-
 
 
 class Token(BaseModel):
@@ -50,50 +56,55 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 # sync Functions
 def verify_password(plain_password: str, crypt_password: str) -> bool:
-    """
-    Verify the password.
+    """Verify input password with hashed password.
 
-    :param plain_password: Plain password
-    :param crypt_password: Hashed password
-    :return: True if password is verified, False otherwise
+    Args:
+        plain_password (str): input password
+        crypt_password (str): hashed password
+
+    Returns:
+        bool: True if password is correct, False otherwise
     """
     return bcrypt.checkpw(plain_password.encode(), crypt_password.encode())
 
 
 def get_password_hash(password: str) -> str:
-    """
-    Get password hash.
+    """Get password hash.
 
-    :param password: Password
-    :return: Hashed password
+    Args:
+        password (str): password
+
+    Returns:
+        str: hashed password
     """
     return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
 
 def authenticate_user(username: str, password: str) -> UserModel | None:
-    """
-    Authenticate user.
+    """Authenticate user.
 
-    :param username: Username
-    :param password: Password
-    :return: UserModel if user is found, None otherwise
-    """
-    users = get_all_users()
+    Args:
+        username (str): username of the user
+        password (str): password of the user
 
-    for user in users:
+    Returns:
+        UserModel | None: User model if user is authenticated, None otherwise
+    """
+    for user in get_users():
         if user.username == username and verify_password(password, str(user.password)):
             return user
     return None
 
 
 def create_access_token(data: dict[str, Any], expires_delta: datetime.timedelta) -> Any:
-    """
-    Create access token.
+    """Create access token.
 
-    :param data: Data
-    :param expires_delta: Expiration delta (optional).
-     Default is 15 minutes.
-    :return: Encoded JWT
+    Args:
+        data (dict[str, Any]): data to encode
+        expires_delta (datetime.timedelta): expiration time
+
+    Returns:
+        Any: encoded token
     """
     to_encode = data.copy()
     expire = datetime.datetime.now() + (
@@ -106,108 +117,78 @@ def create_access_token(data: dict[str, Any], expires_delta: datetime.timedelta)
 
 # async Functions
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> Any:
-    """
-    Get the current user based on token.
+    """Get current user.
 
-    :param token: Token, where the token depends on oauth2_scheme
-    :return: PyUser
-    :raises HTTPException: If the token is invalid,
-                    the username is not found in the token,
-                    or the user does not have enough permissions.
+    Args:
+        token (Annotated[str, Depends): token for user that depends on oauth2_scheme
+
+    Raises:
+        credentials_exception: If the credentials are invalid or the user is not found
+        expired_exception: If the token has expired
+
+    Returns:
+        Any: _description_
     """
-    authenticate_value = "Bearer"
-    # credentials_exception, in case of invalid credentials
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": authenticate_value},
-    )
-    expired_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Token has expired",
-        headers={"WWW-Authenticate": authenticate_value},
-    )
 
     # decode token and get username and role
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         if (username := payload.get("username")) is None:
-            raise credentials_exception
+            raise CREDENTIALS_EXECPTION
     except jwt.ExpiredSignatureError as exc:
-        raise expired_exception from exc
+        raise EXPIRED_EXCEPTION from exc
     except jwt.PyJWTError as exc:
-        raise credentials_exception from exc
+        raise CREDENTIALS_EXECPTION from exc
 
     # get user from token_data
     if (user := find_user(username=username)) is None:
-        raise credentials_exception
+        raise CREDENTIALS_EXECPTION
 
     return user
 
 
 async def check_token_validity(token: str) -> None:
-    """
-    Checks if the token has expired or user is not found.
+    """Check token validity.
 
-    :param token: Token
-    :raises HTTPException:
-                    If the token is invalid,
-                    the username is not found in the token,
-                    or the user does not have enough permissions.
+    Args:
+        token (str): token to check
+
+    Raises:
+        HTTPException: If token is invalid
     """
 
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("username")
         password: str = payload.get("password")
+
         # check if username is found
         if username is None or find_user(username=username) is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Could not validate credentials",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+            raise CREDENTIALS_EXECPTION
         if password is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Could not validate credentials",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+            raise CREDENTIALS_EXECPTION
 
         # check if token does not exist
         if not (token_instance := get_token(token)):
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Token not found",
-            )
+            raise NOT_FOUND_EXCEPTION_TOKEN
         # check if token is invalid
         if not token_instance.valid:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token is invalid",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+            raise INVALID_EXCEPTION_TOKEN
     except jwt.ExpiredSignatureError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token has expired",
-            headers={"WWW-Authenticate": "Bearer"},
-        ) from exc
+        raise EXPIRED_EXCEPTION from exc
     except jwt.PyJWTError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        ) from exc
+        raise CREDENTIALS_EXECPTION from exc
 
 
 async def get_current_active_user(
     current_user: Annotated[UserModel, Security(get_current_user)]
 ) -> Any:
-    """
-    Get current active user.
+    """Get current active user.
 
-    :param current_user: Current user
-    :return: UserModel of the current user
+    Args:
+        current_user (Annotated[UserModel, Security]): current user
+
+    Returns:
+        Any: User model
     """
     return current_user
