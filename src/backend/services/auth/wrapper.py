@@ -2,13 +2,14 @@
 """
 
 import sqlalchemy.exc as db_exc
-from sqlalchemy.orm.session import Session
 from models import TokenModel, UserModel
 
 
 from utils import SessionSingleton
 
 class AuthWrapper:
+    """Wrapper for the auth service.
+    """
     def __init__(self):
         self.session = SessionSingleton().get_session()
         

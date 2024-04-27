@@ -1,5 +1,9 @@
+"""
+FastAPI application for the auth service.
+"""
+import auth
+import healthcheck
 from fastapi import FastAPI
-import auth, healthcheck
 
 app = FastAPI()
 

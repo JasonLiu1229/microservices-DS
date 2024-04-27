@@ -8,4 +8,4 @@ COPY . /app/backend/
 
 RUN pip3 install --no-cache-dir --upgrade -r requirements.txt
 
-CMD ["uvicorn", "app.backend:app", "--port", "8000", "--host", "0.0.0.0"]
+CMD ["uvicorn", "app:app","--proxy-headers", "--host", "127.0.0.1", "--port", "8000"]
