@@ -22,7 +22,8 @@ from fastapi import Depends, Security
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
 
-from wrapper import find_user, get_token, get_users, UserModel
+from wrapper import AuthWrapper
+from models import UserModel
 
 
 # Constants
@@ -90,7 +91,9 @@ def authenticate_user(username: str, password: str) -> UserModel | None:
     Returns:
         UserModel | None: User model if user is authenticated, None otherwise
     """
-    for user in get_users():
+    auth_wrapper = AuthWrapper()
+    
+    for user in auth_wrapper.get_users():
         if user.username == username and verify_password(password, str(user.password)):
             return user
     return None
@@ -129,7 +132,8 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> Any
     Returns:
         Any: _description_
     """
-
+    auth_wrapper = AuthWrapper()
+    
     # decode token and get username and role
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -141,7 +145,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> Any
         raise CREDENTIALS_EXECPTION from exc
 
     # get user from token_data
-    if (user := find_user(username=username)) is None:
+    if (user := auth_wrapper.find_user(username=username)) is None:
         raise CREDENTIALS_EXECPTION
 
     return user
@@ -156,6 +160,7 @@ async def check_token_validity(token: str) -> None:
     Raises:
         HTTPException: If token is invalid
     """
+    auth_wrapper = AuthWrapper()
 
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -163,13 +168,13 @@ async def check_token_validity(token: str) -> None:
         password: str = payload.get("password")
 
         # check if username is found
-        if username is None or find_user(username=username) is None:
+        if username is None or auth_wrapper.find_user(username=username) is None:
             raise CREDENTIALS_EXECPTION
         if password is None:
             raise CREDENTIALS_EXECPTION
 
         # check if token does not exist
-        if not (token_instance := get_token(token)):
+        if not (token_instance := auth_wrapper.get_token(token)):
             raise NOT_FOUND_EXCEPTION_TOKEN
         # check if token is invalid
         if not token_instance.valid:

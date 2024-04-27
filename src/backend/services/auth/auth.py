@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 
-from wrapper import add_token, del_token, create_user, find_user
+from wrapper import AuthWrapper
 
 from dependencies import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
@@ -63,6 +63,8 @@ async def login_for_access_token(
     Returns:
         Response: Access token
     """
+    auth_wrapper = AuthWrapper()
+    
     # authenticate user
     if not (user := authenticate_user(form_data.username, form_data.password)):
         return Response(
@@ -73,9 +75,9 @@ async def login_for_access_token(
     access_token = create_user_token(form_data.username, form_data.password)
 
     try:
-        user = find_user(form_data.username)
+        user = auth_wrapper.find_user(form_data.username)
         # add user token to database
-        add_token(access_token, int(user.id))
+        auth_wrapper.add_token(access_token, int(user.id))
     except ValueError:
         return Response(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -100,11 +102,12 @@ async def register(user: UserModel) -> Response:
     Returns:
         Response: Access token
     """
-
+    auth_wrapper = AuthWrapper()
+    
     # create user
     try:
         hashed_password = get_password_hash(user.password)
-        user_instance = create_user(user.username, hashed_password)
+        user_instance = auth_wrapper.create_user(user.username, hashed_password)
     except ValueError:
         return Response(
             status_code=status.HTTP_409_CONFLICT, content="Username already registered"
@@ -115,7 +118,7 @@ async def register(user: UserModel) -> Response:
 
     # add user token to database
     try:
-        add_token(access_token, int(user_instance.id))
+        auth_wrapper.add_token(access_token, int(user_instance.id))
     except ValueError:
         return Response(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -140,6 +143,8 @@ async def logout(request: Request) -> Response:
     Returns:
         Response: Success message or error message
     """
+    auth_wrapper = AuthWrapper()
+    
     # get the token from the Authorization header
     cookie = request.headers.get("Authorization", None)
     if not (cookie or isinstance(cookie, str)):
@@ -156,7 +161,7 @@ async def logout(request: Request) -> Response:
 
     token = cookie.split(" ")[1]
     try:
-        del_token(token)
+        auth_wrapper.del_token(token)
     except ValueError:
         return Response(
             status_code=status.HTTP_404_NOT_FOUND,

@@ -1,27 +1,31 @@
 name: microservices-ds
 
 services:
-  backend:
-    container_name: microservices-backend
+  backend-auth:
+    container_name: microservices-backend-auth
     hostname: backend
     build:
-      context: ./src/backend
+      context: ./src/backend/services/auth
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
       - "127.0.0.1:8000:8000"
     networks:
       - host
+      - auth
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      - POSTGRES_DB_USER=${APP_DB_USER}
+      - POSTGRES_DB_PASSWORD=${APP_DB_PASSWORD}
+      - POSTGRES_DB=${APP_DB_NAME_USERS}
+      - POSTGRES_DB_HOST=${APP_DB_HOST}
+      - POSTGRES_DB_PORT=${APP_DB_PORT_USERS}
     depends_on:
       db-users:
-        condition: service_healthy
-      db-events:
-        condition: service_healthy
-      db-participations:
-        condition: service_healthy
-      db-invitations:
-        condition: service_healthy
-      db-calendar-shares:
         condition: service_healthy
 
   frontend:
@@ -36,7 +40,7 @@ services:
     networks:
       - host
     depends_on:
-      backend:
+      backend-auth:
         condition: service_healthy
 
   db-users:
@@ -44,10 +48,10 @@ services:
     hostname: db
     image: "postgres:16.2-bookworm"
     environment:
-      - POSTGRES_USER=${APP_DB_USER}
-      - POSTGRES_PASSWORD=${APP_DB_PASSWORD}
+      - POSTGRES_DB_USER=${APP_DB_USER}
+      - POSTGRES_DB_PASSWORD=${APP_DB_PASSWORD}
       - POSTGRES_DB=${APP_DB_NAME_USERS}
-      - POSTGRES_DB_HOST=${APP_DB_NAME}
+      - POSTGRES_DB_HOST=${APP_DB_HOST}
       - POSTGRES_DB_PORT=${APP_DB_PORT_USERS}
     ports:
       - "127.0.0.1:5437:5432"
@@ -59,6 +63,7 @@ services:
     restart: unless-stopped
     networks:
       - host
+      - auth
     volumes:
       - ./config/db/postgresql.conf:/etc/postgresql/postgresql.conf
       - ./src/db/sql/users.sql:/docker-entrypoint-initdb.d/init.sql
@@ -69,10 +74,10 @@ services:
     hostname: db
     image: "postgres:16.2-bookworm"
     environment:
-      - POSTGRES_USER=${APP_DB_USER}
-      - POSTGRES_PASSWORD=${APP_DB_PASSWORD}
+      - POSTGRES_DB_USER=${APP_DB_USER}
+      - POSTGRES_DB_PASSWORD=${APP_DB_PASSWORD}
       - POSTGRES_DB=${APP_DB_NAME_EVENTS}
-      - POSTGRES_DB_HOST=${APP_DB_NAME}
+      - POSTGRES_DB_HOST=${APP_DB_HOST}
       - POSTGRES_DB_PORT=${APP_DB_PORT_EVENTS}
     ports:
       - "127.0.0.1:5433:5432"
@@ -94,10 +99,10 @@ services:
     hostname: db
     image: "postgres:16.2-bookworm"
     environment:
-      - POSTGRES_USER=${APP_DB_USER}
-      - POSTGRES_PASSWORD=${APP_DB_PASSWORD}
+      - POSTGRES_DB_USER=${APP_DB_USER}
+      - POSTGRES_DB_PASSWORD=${APP_DB_PASSWORD}
       - POSTGRES_DB=${APP_DB_NAME_INVITATIONS}
-      - POSTGRES_DB_HOST=${APP_DB_NAME}
+      - POSTGRES_DB_HOST=${APP_DB_HOST}
       - POSTGRES_DB_PORT=${APP_DB_PORT_INVITATIONS}
     ports:
       - "127.0.0.1:5434:5432"
@@ -119,10 +124,10 @@ services:
     hostname: db
     image: "postgres:16.2-bookworm"
     environment:
-      - POSTGRES_USER=${APP_DB_USER}
-      - POSTGRES_PASSWORD=${APP_DB_PASSWORD}
+      - POSTGRES_DB_USER=${APP_DB_USER}
+      - POSTGRES_DB_PASSWORD=${APP_DB_PASSWORD}
       - POSTGRES_DB=${APP_DB_NAME_PARTICIPATIONS}
-      - POSTGRES_DB_HOST=${APP_DB_NAME}
+      - POSTGRES_DB_HOST=${APP_DB_HOST}
       - POSTGRES_DB_PORT=${APP_DB_PORT_PARTICIPATIONS}
     ports:
       - "127.0.0.1:5435:5432"
@@ -144,10 +149,10 @@ services:
     hostname: db
     image: "postgres:16.2-bookworm"
     environment:
-      - POSTGRES_USER=${APP_DB_USER}
-      - POSTGRES_PASSWORD=${APP_DB_PASSWORD}
+      - POSTGRES_DB_USER=${APP_DB_USER}
+      - POSTGRES_DB_PASSWORD=${APP_DB_PASSWORD}
       - POSTGRES_DB=${APP_DB_NAME_CALENDAR_SHARES}
-      - POSTGRES_DB_HOST=${APP_DB_NAME}
+      - POSTGRES_DB_HOST=${APP_DB_HOST}
       - POSTGRES_DB_PORT=${APP_DB_PORT_CALENDAR_SHARES}
     ports:
       - "127.0.0.1:5436:5432"
@@ -166,6 +171,9 @@ services:
 
 networks:
   host: {}
+  auth: 
+    driver: bridge
+
 
 volumes:
   db-data-users: {}
