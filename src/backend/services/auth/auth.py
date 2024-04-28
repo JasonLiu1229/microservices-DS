@@ -3,24 +3,15 @@ This file contains the security routes for the FastAPI application.
 """
 
 # Imports
-import datetime
-import json
+from exceptions import CREDENTIALS_EXECPTION
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import APIRouter, HTTPException, Request, Response
 from pydantic import BaseModel
 
 from wrapper import AuthWrapper
 
-from dependencies import (
-    ACCESS_TOKEN_EXPIRE_MINUTES,
-    authenticate_user,
-    check_token_validity,
-    create_access_token,
-    get_password_hash,
-)
-
 router = APIRouter(responses={404: {"description": "Not found"}})
+
 
 class UserModel(BaseModel):
     """
@@ -31,106 +22,55 @@ class UserModel(BaseModel):
     password: str
 
 
-# helper functions
-def create_user_token(username: str, password: str) -> str:
-    """Create user token.
-
-    Args:
-        username (str): username of user
-        password (str): password of user
-
-    Returns:
-        str: token
-    """
-    access_token_expires = datetime.timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"username": username, "password": password},
-        expires_delta=access_token_expires,
-    )
-    return str(access_token)
-
-
 # Routes
 @router.post("/login")
-async def login_for_access_token(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-) -> Response:
-    """Login endpoint for users to authenticate and receive an access token.
+async def login_for_access_token(user: UserModel) -> Response:
+    """Login endpoint for users to authenticate.
 
     Args:
-        form_data (OAuth2PasswordRequestForm, optional): OAuth2 form. Defaults to Depends().
+        User (UserModel): User model, so basic user information needed to authenticate.
 
     Returns:
-        Response: Access token
+        Response: status code 200
     """
     auth_wrapper = AuthWrapper()
-    
-    # authenticate user
-    if not (user := authenticate_user(form_data.username, form_data.password)):
-        return Response(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            content="Incorrect username or password",
-        )
-    # create access token
-    access_token = create_user_token(form_data.username, form_data.password)
 
-    try:
-        user = auth_wrapper.find_user(form_data.username)
-        # add user token to database
-        auth_wrapper.add_token(access_token, int(user.id))
-    except ValueError:
-        return Response(
-            status_code=status.HTTP_404_NOT_FOUND,
-            content="User not found",
-        )
+    if not user.username or not user.password:
+        raise CREDENTIALS_EXECPTION
 
-    # return access token
-    return Response(
-        status_code=status.HTTP_200_OK,
-        content="Login successful",
-        headers={"Authorization": f"Bearer {access_token}"},
-    )
+    if not auth_wrapper.check_user_exists(user.username):
+        raise CREDENTIALS_EXECPTION
+
+    if user.password != auth_wrapper.get_password(user.username):
+        raise CREDENTIALS_EXECPTION
+
+    auth_wrapper.close()
+    return Response(status_code=200)
+
 
 
 @router.post("/register")
 async def register(user: UserModel) -> Response:
-    """Register endpoint for users to create an account and receive an access token.
+    """Register endpoint for users to create an account.
 
     Args:
         user (UserModel): User model, so basic user information needed to create an account.
 
     Returns:
-        Response: Access token
+        Response: status code 200
     """
     auth_wrapper = AuthWrapper()
+
+    if not user.username or not user.password:
+        raise HTTPException(status_code=400, detail="Username or password not provided")
+
+    if auth_wrapper.check_user_exists(user.username):
+        raise HTTPException(status_code=400, detail="User already exists")
     
-    # create user
-    try:
-        hashed_password = get_password_hash(user.password)
-        user_instance = auth_wrapper.create_user(user.username, hashed_password)
-    except ValueError:
-        return Response(
-            status_code=status.HTTP_409_CONFLICT, content="Username already registered"
-        )
+    auth_wrapper.create_user(user.username, user.password)
 
-    # create access token
-    access_token = create_user_token(user.username, user.password)
-
-    # add user token to database
-    try:
-        auth_wrapper.add_token(access_token, int(user_instance.id))
-    except ValueError:
-        return Response(
-            status_code=status.HTTP_404_NOT_FOUND,
-            content="User not found",
-        )
-
-    # return username and access token
-    return Response(
-        status_code=status.HTTP_200_OK,
-        content=json.dumps({"username": user.username}),
-        headers={"Authorization": f"Bearer {access_token}"},
-    )
+    auth_wrapper.close()
+    return Response(status_code=200)
 
 
 @router.put("/logout")
@@ -143,74 +83,4 @@ async def logout(request: Request) -> Response:
     Returns:
         Response: Success message or error message
     """
-    auth_wrapper = AuthWrapper()
-    
-    # get the token from the Authorization header
-    cookie = request.headers.get("Authorization", None)
-    if not (cookie or isinstance(cookie, str)):
-        return Response(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            content="Not Authorized",
-        )
-
-    if not cookie.startswith("Bearer "):
-        return Response(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            content="Not Authorized",
-        )
-
-    token = cookie.split(" ")[1]
-    try:
-        auth_wrapper.del_token(token)
-    except ValueError:
-        return Response(
-            status_code=status.HTTP_404_NOT_FOUND,
-            content="Token not found",
-        )
-
-    return Response(
-        status_code=status.HTTP_200_OK,
-        content=json.dumps({"message": "User logged out"}),
-    )
-
-
-@router.get("/status")
-async def get_status(request: Request) -> Response:
-    """Get the status of the user session.
-
-    Args:
-        request (Request): Request object, contains the Authorization header with the token.
-
-    Returns:
-        Response: Success message or error message
-    """
-    # get cookie from request headers
-    cookie = request.headers.get("Authorization", None)
-    if not (cookie or isinstance(cookie, str)):
-        return Response(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            content="No cookie provided in headers",
-        )
-
-    if not cookie.startswith("Bearer "):
-        return Response(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            content="Invalid cookie format",
-        )
-
-    token = cookie.split(" ")[1]
-
-    # unpack cookie
-    try:
-        await check_token_validity(token)
-    except HTTPException as exc:
-        return Response(
-            status_code=exc.status_code,
-            content=exc.detail,
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    return Response(
-        status_code=status.HTTP_200_OK,
-        content="User session is active",
-    )
+    pass

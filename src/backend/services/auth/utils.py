@@ -35,7 +35,7 @@ def get_database_url() -> URL:
         username=user,
         password=password,
         host=host,
-        port=port,
+        port=5432,
         database=database_name,
     )
 
@@ -46,7 +46,7 @@ def get_engine() -> Engine:
 
     :return: Database engine
     """
-    return create_engine(get_database_url())
+    return create_engine(get_database_url(), pool_pre_ping=True)
 
 
 def get_session() -> Session:
@@ -62,7 +62,6 @@ class SessionSingleton:
     """
     Singleton for the database session.
     """
-
     _session = None
 
     @classmethod

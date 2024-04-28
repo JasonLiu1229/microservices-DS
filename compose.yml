@@ -12,7 +12,7 @@ services:
       - 8000:8000
     networks:
       - host
-      - auth
+      - db-users
     healthcheck:
       test: if [ $(curl -LI http://127.0.0.1:8000/health -o /dev/null -w '%{http_code}\n' -s) == "200" ]; then echo 0; fi || exit 1
       interval: 10s
@@ -23,7 +23,7 @@ services:
       - POSTGRES_DB_USER=${APP_DB_USER}
       - POSTGRES_DB_PASSWORD=${APP_DB_PASSWORD}
       - POSTGRES_DB=${APP_DB_NAME_USERS}
-      - POSTGRES_DB_HOST=${APP_DB_HOST}
+      - POSTGRES_DB_HOST=${APP_DB_HOST_USERS}
       - POSTGRES_DB_PORT=${APP_DB_PORT_USERS}
     depends_on:
       db-users:
@@ -61,8 +61,8 @@ services:
       retries: 5
     restart: unless-stopped
     networks:
-      - host
-      - auth
+      db-users:
+        aliases: ["${APP_DB_HOST_USERS?}"]
     volumes:
       - ./config/db/postgresql.conf:/etc/postgresql/postgresql.conf
       - ./src/db/sql/users.sql:/docker-entrypoint-initdb.d/init.sql
@@ -85,7 +85,8 @@ services:
       retries: 5
     restart: unless-stopped
     networks:
-      - host
+      db-events:
+        aliases: ["${APP_DB_HOST_EVENTS?}"]
     volumes:
       - ./config/db/postgresql.conf:/etc/postgresql/postgresql.conf
       - ./src/db/sql/events.sql:/docker-entrypoint-initdb.d/init.sql
@@ -108,7 +109,8 @@ services:
       retries: 5
     restart: unless-stopped
     networks:
-      - host
+      db-invitations:
+        aliases: ["${APP_DB_HOST_INVITATIONS?}"]
     volumes:
       - ./config/db/postgresql.conf:/etc/postgresql/postgresql.conf
       - ./src/db/sql/invitations.sql:/docker-entrypoint-initdb.d/init.sql
@@ -131,7 +133,8 @@ services:
       retries: 5
     restart: unless-stopped
     networks:
-      - host
+      db-participations:
+        aliases: ["${APP_DB_HOST_PARTICIPATIONS?}"]
     volumes:
       - ./config/db/postgresql.conf:/etc/postgresql/postgresql.conf
       - ./src/db/sql/participations.sql:/docker-entrypoint-initdb.d/init.sql
@@ -145,8 +148,6 @@ services:
       - POSTGRES_USER=${APP_DB_USER}
       - POSTGRES_PASSWORD=${APP_DB_PASSWORD}
       - POSTGRES_DB=${APP_DB_NAME_CALENDAR_SHARES}
-      - POSTGRES_DB_HOST=${APP_DB_HOST}
-      - POSTGRES_DB_PORT=${APP_DB_PORT_CALENDAR_SHARES}
     ports:
       - "127.0.0.1:5436:5432"
     healthcheck:
@@ -156,7 +157,8 @@ services:
       retries: 5
     restart: unless-stopped
     networks:
-      - host
+      db-calendar_shares:
+        aliases: ["${APP_DB_HOST_CALENDAR_SHARES?}"]
     volumes:
       - ./config/db/postgresql.conf:/etc/postgresql/postgresql.conf
       - ./src/db/sql/calendar_shares.sql:/docker-entrypoint-initdb.d/init.sql
@@ -164,9 +166,11 @@ services:
 
 networks:
   host: {}
-  auth: 
-    driver: bridge
-
+  db-users: {}
+  db-events: {}
+  db-invitations: {}
+  db-participations: {}
+  db-calendar_shares: {}
 
 volumes:
   db-data-users: {}

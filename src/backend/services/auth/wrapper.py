@@ -2,17 +2,17 @@
 """
 
 import sqlalchemy.exc as db_exc
-from models import TokenModel, UserModel
-
+from models import UserModel
 
 from utils import SessionSingleton
 
+
 class AuthWrapper:
-    """Wrapper for the auth service.
-    """
-    def __init__(self):
+    """Wrapper for the auth service."""
+
+    def __init__(self) -> None:
         self.session = SessionSingleton().get_session()
-        
+
     def create_user(self, username: str, password: str) -> UserModel:
         """Create user.
 
@@ -32,7 +32,6 @@ class AuthWrapper:
             self.session.rollback()
             raise ValueError(f"Failed to create user: {e}") from e
 
-
     def find_user(self, username: str) -> UserModel:
         """Find user.
 
@@ -43,11 +42,14 @@ class AuthWrapper:
             UserModel: user model
         """
         try:
-            user = self.session.query(UserModel).filter(UserModel.username == username).one()
+            user = (
+                self.session.query(UserModel)
+                .filter(UserModel.username == username)
+                .one()
+            )
             return user
         except db_exc.NoResultFound as e:
             raise ValueError(f"User not found: {e}") from e
-
 
     def get_users(self) -> list[str]:
         """Get all users.
@@ -61,54 +63,33 @@ class AuthWrapper:
         except db_exc.NoResultFound as e:
             raise ValueError(f"Users not found: {e}") from e
 
-
-    def add_token(self, token: str, user_id: int) -> TokenModel:
-        """Add token to user.
+    def get_password(self, username: str) -> str:
+        """Get password.
 
         Args:
-            token (str): token to add
-            user_id (int): user id to add token to
+            username (str): username of user
 
         Returns:
-            TokenModel: token model
+            str: password
         """
-        try:
-            token_instance = TokenModel(token=token, user_id=user_id)
-            self.session.add(token_instance)
-            self.session.commit()
-            return token_instance
-        except db_exc.OperationalError as e:
-            self.session.rollback()
-            raise ValueError(f"Failed to add token: {e}") from e
+        user = self.find_user(username)
+        return user.password
 
-
-    def del_token(self, token: str) -> None:
-        """Delete token, is not a real delete, it just makes the token invalid for the user.
+    def check_user_exists(self, username: str) -> bool:
+        """Check if user exists.
 
         Args:
-            token (str): token to delete
-        """
-        try:
-            token_instance = (
-                self.session.query(TokenModel).filter(TokenModel.token == token).one()
-            )
-            token_instance.valid = False
-        except db_exc.NoResultFound as e:
-            raise ValueError(f"Token not found: {e}") from e
-
-    def get_token(self, token: str) -> TokenModel:
-        """Get token.
-
-        Args:
-            token (str): token to get
+            username (str): username of user
 
         Returns:
-            TokenModel: token model
+            bool: True if user exists, False otherwise
         """
         try:
-            token_instance = (
-                self.session.query(TokenModel).filter(TokenModel.token == token).one()
-            )
-            return token_instance
-        except db_exc.NoResultFound as e:
-            raise ValueError(f"Token not found: {e}") from e
+            self.find_user(username)
+            return True
+        except ValueError:
+            return False
+
+    def close(self) -> None:
+        """Close session."""
+        self.session.close()
