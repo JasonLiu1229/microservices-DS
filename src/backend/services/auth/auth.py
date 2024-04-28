@@ -71,16 +71,3 @@ async def register(user: UserModel) -> Response:
 
     auth_wrapper.close()
     return Response(status_code=200)
-
-
-@router.put("/logout")
-async def logout(request: Request) -> Response:
-    """Logout endpoint for users to log out and invalidate their access token.
-
-    Args:
-        request (Request): Request object, contains the Authorization header with the token.
-
-    Returns:
-        Response: Success message or error message
-    """
-    pass
