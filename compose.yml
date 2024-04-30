@@ -28,7 +28,7 @@ services:
     depends_on:
       db-users:
         condition: service_healthy
-    
+
   backend-calendar:
     container_name: microservices-backend-calendar
     hostname: backend
@@ -53,6 +53,93 @@ services:
       - POSTGRES_DB=${APP_DB_NAME_CALENDAR_SHARES}
       - POSTGRES_DB_HOST=${APP_DB_HOST_CALENDAR_SHARES}
       - POSTGRES_DB_PORT=${APP_DB_PORT_CALENDAR_SHARES}
+    depends_on:
+      db-calendar_shares:
+        condition: service_healthy
+
+  backend-events:
+    container_name: microservices-backend-events
+    hostname: backend
+    build:
+      context: ./src/backend/services/events
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - 8002:8002
+    networks:
+      - host
+      - db-events
+    healthcheck:
+      test: if [ $(curl -LI http://127.0.0.1:8000/health -o /dev/null -w '%{http_code}\n' -s) == "200" ]; then echo 0; fi || exit 1
+      interval: 10s
+      timeout: 5s
+      start_period: 60s
+      retries: 5
+    environment:
+      - POSTGRES_DB_USER=${APP_DB_USER}
+      - POSTGRES_DB_PASSWORD=${APP_DB_PASSWORD}
+      - POSTGRES_DB=${APP_DB_NAME_EVENTS}
+      - POSTGRES_DB_HOST=${APP_DB_HOST_EVENTS}
+      - POSTGRES_DB_PORT=${APP_DB_PORT_EVENTS}
+    depends_on:
+      db-events:
+        condition: service_healthy
+
+  backend-invitations:
+    container_name: microservices-backend-invitations
+    hostname: backend
+    build:
+      context: ./src/backend/services/invitations
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - 8003:8003
+    networks:
+      - host
+      - db-invitations
+    healthcheck:
+      test: if [ $(curl -LI http://127.0.0.1:8000/health -o /dev/null -w '%{http_code}\n' -s) == "200" ]; then echo 0; fi || exit 1
+      interval: 10s
+      timeout: 5s
+      start_period: 60s
+      retries: 5
+    environment:
+      - POSTGRES_DB_USER=${APP_DB_USER}
+      - POSTGRES_DB_PASSWORD=${APP_DB_PASSWORD}
+      - POSTGRES_DB=${APP_DB_NAME_INVITATIONS}
+      - POSTGRES_DB_HOST=${APP_DB_HOST_INVITATIONS}
+      - POSTGRES_DB_PORT=${APP_DB_PORT_INVITATIONS}
+    depends_on:
+      db-invitations:
+        condition: service_healthy
+
+  backend-participations:
+    container_name: microservices-backend-participations
+    hostname: backend
+    build:
+      context: ./src/backend/services/participations
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - 8004:8004
+    networks:
+      - host
+      - db-participations
+    healthcheck:
+      test: if [ $(curl -LI http://127.0.0.1:8000/health -o /dev/null -w '%{http_code}\n' -s) == "200" ]; then echo 0; fi || exit 1
+      interval: 10s
+      timeout: 5s
+      start_period: 60s
+      retries: 5
+    environment:
+      - POSTGRES_DB_USER=${APP_DB_USER}
+      - POSTGRES_DB_PASSWORD=${APP_DB_PASSWORD}
+      - POSTGRES_DB=${APP_DB_NAME_PARTICIPATIONS}
+      - POSTGRES_DB_HOST=${APP_DB_HOST_PARTICIPATIONS}
+      - POSTGRES_DB_PORT=${APP_DB_PORT_PARTICIPATIONS}
+    depends_on:
+      db-participations:
+        condition: service_healthy
 
   frontend:
     container_name: microservices-frontend
