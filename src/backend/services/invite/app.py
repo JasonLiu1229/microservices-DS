@@ -1,4 +1,10 @@
+"""
+FastAPI application for the service.
+"""
+import healthcheck
 from fastapi import FastAPI
-import invite
 
 app = FastAPI()
+
+app.include_router(healthcheck.router, prefix="/health", tags=["health_check"])
+

@@ -27,7 +27,7 @@ def get_database_url() -> URL:
     user = get_env_variable("POSTGRES_DB_USER")
     password = get_env_variable("POSTGRES_DB_PASSWORD")
     host = get_env_variable("POSTGRES_DB_HOST")
-    port = get_env_variable("POSTGRES_DB_PORT")
+    # port = get_env_variable("POSTGRES_DB_PORT")
     database_name = get_env_variable("POSTGRES_DB")
 
     return URL.create(

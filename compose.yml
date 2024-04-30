@@ -28,6 +28,31 @@ services:
     depends_on:
       db-users:
         condition: service_healthy
+    
+  backend-calendar:
+    container_name: microservices-backend-calendar
+    hostname: backend
+    build:
+      context: ./src/backend/services/calendar
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - 8001:8001
+    networks:
+      - host
+      - db-calendar_shares
+    healthcheck:
+      test: if [ $(curl -LI http://127.0.0.1:8000/health -o /dev/null -w '%{http_code}\n' -s) == "200" ]; then echo 0; fi || exit 1
+      interval: 10s
+      timeout: 5s
+      start_period: 60s
+      retries: 5
+    environment:
+      - POSTGRES_DB_USER=${APP_DB_USER}
+      - POSTGRES_DB_PASSWORD=${APP_DB_PASSWORD}
+      - POSTGRES_DB=${APP_DB_NAME_CALENDAR_SHARES}
+      - POSTGRES_DB_HOST=${APP_DB_HOST_CALENDAR_SHARES}
+      - POSTGRES_DB_PORT=${APP_DB_PORT_CALENDAR_SHARES}
 
   frontend:
     container_name: microservices-frontend

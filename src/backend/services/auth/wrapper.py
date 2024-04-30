@@ -7,7 +7,7 @@ from models import UserModel
 from utils import SessionSingleton
 
 
-class AuthWrapper:
+class Wrapper:
     """Wrapper for the auth service."""
 
     def __init__(self) -> None:

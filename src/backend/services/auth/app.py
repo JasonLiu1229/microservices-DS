@@ -1,5 +1,5 @@
 """
-FastAPI application for the auth service.
+FastAPI application for the service.
 """
 import auth
 import healthcheck

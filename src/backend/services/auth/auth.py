@@ -1,14 +1,14 @@
 """
-This file contains the security routes for the FastAPI application.
+This file contains the auth routes for the FastAPI application.
 """
 
 # Imports
 from exceptions import CREDENTIALS_EXECPTION
 
-from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel
 
-from wrapper import AuthWrapper
+from wrapper import Wrapper
 
 router = APIRouter(responses={404: {"description": "Not found"}})
 
@@ -33,7 +33,7 @@ async def login_for_access_token(user: UserModel) -> Response:
     Returns:
         Response: status code 200
     """
-    auth_wrapper = AuthWrapper()
+    auth_wrapper = Wrapper()
 
     if not user.username or not user.password:
         raise CREDENTIALS_EXECPTION
@@ -59,7 +59,7 @@ async def register(user: UserModel) -> Response:
     Returns:
         Response: status code 200
     """
-    auth_wrapper = AuthWrapper()
+    auth_wrapper = Wrapper()
 
     if not user.username or not user.password:
         raise HTTPException(status_code=400, detail="Username or password not provided")
