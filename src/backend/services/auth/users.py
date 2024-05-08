@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Response
-from wrapper import AuthWrapper
+from wrapper import Wrapper
 
 router = APIRouter(responses={404: {"description": "Not found"}})
 
@@ -10,7 +10,7 @@ async def get_users() -> Response:
     Returns:
         Response: 200 OK
     """
-    auth_wrapper = AuthWrapper()
+    auth_wrapper = Wrapper()
     users = auth_wrapper.get_users()
     users_username = [user.username for user in users]
     return Response(content={"users": users_username}, status_code=200)
