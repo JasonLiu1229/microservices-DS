@@ -37,7 +37,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - 8001:8001
+      - 8001:8000
     networks:
       - host
       - db-calendar_shares
@@ -65,7 +65,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - 8002:8002
+      - 8002:8000
     networks:
       - host
       - db-events
@@ -93,7 +93,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - 8003:8003
+      - 8003:8000
     networks:
       - host
       - db-invitations
@@ -121,7 +121,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - 8004:8004
+      - 8004:8000
     networks:
       - host
       - db-participations

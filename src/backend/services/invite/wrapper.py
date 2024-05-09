@@ -3,9 +3,15 @@
 
 import sqlalchemy.exc as db_exc
 from models import InvitationModel
+from enum import Enum
 
 from utils import SessionSingleton
 
+class InvitationStatus(Enum): 
+    PENDING = "pending",
+    ACCEPTED = "accepted"
+    DECLINED = "declined"
+    MAYBE = "maybe"
 
 class Wrapper:
     """Wrapper for the invitation service."""
@@ -71,3 +77,46 @@ class Wrapper:
         except db_exc.OperationalError as e:
             self.session.rollback()
             raise ValueError(f"Failed to delete invitation: {e}") from e
+
+    def update_invitation(self, invitation_id: int, status: InvitationStatus, user_id: int) -> None:
+        """Update invitation.
+
+        Args:
+            invitation_id (int): invitation id
+            status (str): invitation status
+            user_id (int): user id
+        """
+        try:
+            invitation = (
+                self.session.query(InvitationModel)
+                .filter(InvitationModel.id == invitation_id)
+                .one()
+            )
+            if invitation.user_id != user_id:
+                raise ValueError("User does not have permission to update invitation")
+            invitation.status = status
+            self.session.commit()
+        except db_exc.NoResultFound as e:
+            raise ValueError(f"Invitation not found: {e}") from e
+        except db_exc.OperationalError as e:
+            self.session.rollback()
+            raise ValueError(f"Failed to update invitation: {e}") from e
+
+    def get_invite(self, invite_id: int) -> dict:
+        """Get invite.
+
+        Args:
+            invite_id (int): invite id
+
+        Returns:
+            dict: invite
+        """
+        try:
+            invite = (
+                self.session.query(InvitationModel)
+                .filter(InvitationModel.id == invite_id)
+                .one()
+            )
+            return invite.__dict__
+        except db_exc.NoResultFound as e:
+            raise ValueError(f"Invite not found: {e}") from e
