@@ -89,6 +89,25 @@ class Wrapper:
             return True
         except ValueError:
             return False
+        
+    def get_user(self, user_id: int) -> dict:
+        """Get user.
+
+        Args:
+            user_id (int): user id
+
+        Returns:
+            dict: user
+        """
+        try:
+            user = (
+                self.session.query(UserModel)
+                .filter(UserModel.id == user_id)
+                .one()
+            )
+            return user.__dict__
+        except db_exc.NoResultFound as e:
+            raise ValueError(f"User not found: {e}") from e
 
     def close(self) -> None:
         """Close session."""
