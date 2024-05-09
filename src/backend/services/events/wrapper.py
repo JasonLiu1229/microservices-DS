@@ -8,7 +8,7 @@ from utils import SessionSingleton
 
 
 class Wrapper:
-    """Wrapper for the calendar service."""
+    """Wrapper for the events service."""
 
     def __init__(self) -> None:
         self.session = SessionSingleton().get_session()
@@ -65,4 +65,3 @@ class Wrapper:
         except db_exc.OperationalError as e:
             self.session.rollback()
             raise ValueError(f"Failed to create event: {e}") from e
-
