@@ -1,4 +1,4 @@
-from sqlalchemy import Column, SmallInteger, String, Enum
+from sqlalchemy import Column, SmallInteger, Enum
 # from sqlalchemy.ext.declarative import declarative_base
 
 # Base = declarative_base()
