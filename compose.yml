@@ -42,7 +42,7 @@ services:
       - host
       - db-calendar_shares
     healthcheck:
-      test: if [ $(curl -LI http://127.0.0.1:8000/health -o /dev/null -w '%{http_code}\n' -s) == "200" ]; then echo 0; fi || exit 1
+      test: if [ $(curl -LI http://127.0.0.1:8001/health -o /dev/null -w '%{http_code}\n' -s) == "200" ]; then echo 0; fi || exit 1
       interval: 10s
       timeout: 5s
       start_period: 60s
@@ -70,7 +70,7 @@ services:
       - host
       - db-events
     healthcheck:
-      test: if [ $(curl -LI http://127.0.0.1:8000/health -o /dev/null -w '%{http_code}\n' -s) == "200" ]; then echo 0; fi || exit 1
+      test: if [ $(curl -LI http://127.0.0.1:8002/health -o /dev/null -w '%{http_code}\n' -s) == "200" ]; then echo 0; fi || exit 1
       interval: 10s
       timeout: 5s
       start_period: 60s
@@ -98,7 +98,7 @@ services:
       - host
       - db-invitations
     healthcheck:
-      test: if [ $(curl -LI http://127.0.0.1:8000/health -o /dev/null -w '%{http_code}\n' -s) == "200" ]; then echo 0; fi || exit 1
+      test: if [ $(curl -LI http://127.0.0.1:8003/health -o /dev/null -w '%{http_code}\n' -s) == "200" ]; then echo 0; fi || exit 1
       interval: 10s
       timeout: 5s
       start_period: 60s
@@ -126,7 +126,7 @@ services:
       - host
       - db-participations
     healthcheck:
-      test: if [ $(curl -LI http://127.0.0.1:8000/health -o /dev/null -w '%{http_code}\n' -s) == "200" ]; then echo 0; fi || exit 1
+      test: if [ $(curl -LI http://127.0.0.1:8004/health -o /dev/null -w '%{http_code}\n' -s) == "200" ]; then echo 0; fi || exit 1
       interval: 10s
       timeout: 5s
       start_period: 60s
@@ -154,6 +154,14 @@ services:
       - host
     depends_on:
       backend-auth:
+        condition: service_healthy
+      backend-calendar:
+        condition: service_healthy
+      backend-events:
+        condition: service_healthy
+      backend-invitations:
+        condition: service_healthy
+      backend-participations:
         condition: service_healthy
 
   db-users:

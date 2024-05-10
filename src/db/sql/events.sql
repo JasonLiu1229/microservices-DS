@@ -4,5 +4,5 @@ CREATE TABLE "events" (
   "title" TEXT NOT NULL,
   "description" TEXT,
   "date" DATE NOT NULL,
-  "is_public" BOOLEAN NOT NULL DEFAULT false,
+  "is_public" BOOLEAN NOT NULL DEFAULT false
 );
