@@ -1,12 +1,15 @@
-from sqlalchemy import Column, SmallInteger, Enum
-# from sqlalchemy.ext.declarative import declarative_base
+"""
+Models for the invitation service.
+"""
 
-# Base = declarative_base()
+from sqlalchemy import Column, Enum, SmallInteger
 
 from sqlalchemy.orm import DeclarativeBase
 
+
 class Base(DeclarativeBase):
     """Base class"""
+
 
 class InvitationModel(Base):
     """
@@ -19,4 +22,8 @@ class InvitationModel(Base):
     event_id = Column(SmallInteger, nullable=False)
     user_id = Column(SmallInteger, nullable=False)
     invitee_id = Column(SmallInteger, nullable=False)
-    status = Column(Enum("pending", "accepted", "declined", "maybe"), nullable=False, default="pending")
+    status = Column(
+        Enum("pending", "accepted", "declined", "maybe"),
+        nullable=False,
+        default="pending",
+    )

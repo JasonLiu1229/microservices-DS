@@ -1,4 +1,4 @@
-"""Database wrapper for the auth service.
+"""Database wrapper for the events service.
 """
 
 import sqlalchemy.exc as db_exc
@@ -28,14 +28,12 @@ class Wrapper:
         """
         try:
             event = (
-                self.session.query(EventModel)
-                .filter(EventModel.id == event_id)
-                .one()
+                self.session.query(EventModel).filter(EventModel.id == event_id).one()
             )
             return event.__dict__
         except db_exc.NoResultFound as e:
             raise ValueError(f"Event not found: {e}") from e
-        
+
     def get_events(self) -> list[dict]:
         """Get all events.
 
@@ -47,8 +45,15 @@ class Wrapper:
             return [event.__dict__ for event in events]
         except db_exc.NoResultFound as e:
             raise ValueError(f"Events not found: {e}") from e
-        
-    def create_event(self, organizer_id: int, title: str, description: str, date: str, is_public: bool) -> None:
+
+    def create_event(
+        self,
+        organizer_id: int,
+        title: str,
+        description: str,
+        date: str,
+        is_public: bool,
+    ) -> None:
         """Create event.
 
         Args:
@@ -59,7 +64,13 @@ class Wrapper:
             is_public (bool): is event public
         """
         try:
-            event = EventModel(organizer_id=organizer_id, title=title, description=description, date=date, is_public=is_public)
+            event = EventModel(
+                organizer_id=organizer_id,
+                title=title,
+                description=description,
+                date=date,
+                is_public=is_public,
+            )
             self.session.add(event)
             self.session.commit()
         except db_exc.OperationalError as e:

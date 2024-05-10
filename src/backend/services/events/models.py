@@ -1,8 +1,6 @@
-from sqlalchemy import Column, SmallInteger, String, Boolean
+"""Models for the event service."""
 
-# from sqlalchemy.ext.declarative import declarative_base
-
-# Base = declarative_base()
+from sqlalchemy import Boolean, Column, SmallInteger, String
 
 from sqlalchemy.orm import DeclarativeBase
 
