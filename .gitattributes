@@ -59,6 +59,6 @@ Dockerfile  text
 #
 # image files are treated as binary by default.
 ##############################################################################
-*.jpg   binary
-*.png   binary
-*.gif   binary
+*.jpg   binary lfs 
+*.png   binary lfs
+*.gif   binary lfs
