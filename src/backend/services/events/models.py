@@ -1,6 +1,6 @@
 """Models for the event service."""
 
-from sqlalchemy import Boolean, Column, SmallInteger, String
+from sqlalchemy import Boolean, Column, SmallInteger, String, Date
 
 from sqlalchemy.orm import DeclarativeBase
 
@@ -20,5 +20,5 @@ class EventModel(Base):
     organizer_id = Column(SmallInteger, nullable=False)
     title = Column(String, nullable=False)
     description = Column(String, nullable=False)
-    date = Column(String, nullable=False)
     is_public = Column(Boolean, nullable=False, default=False)
+    date = Column(Date, nullable=False)
