@@ -16,13 +16,13 @@ def save_to_session(key, value) -> None:
     session_data[key] = value
 
 
-def load_from_session(key):# -> Any | None:
+def load_from_session(key):  # -> Any | None:
     return (
         session_data.pop(key) if key in session_data else None
     )  # Pop to ensure that it is only used once
 
 
-def succesful_request(r):# -> Any:
+def succesful_request(r):  # -> Any:
     return r.status_code == 200
 
 
@@ -60,6 +60,37 @@ def create_event() -> Response:
     #
     # Given some data, create an event and send out the invites.
     # ==========================
+    response = requests.post(
+        "http://backend-events:8000/events",
+        json={
+            "organizer_id": username,
+            "title": title,
+            "description": description,
+            "date": "Tomorrow",
+            "is_public": publicprivate == "Public",
+        },
+        timeout=100,
+    )
+    
+    users_invites = invites.split(";")
+    users = requests.get("http://backend-auth:8000/users", timeout=100).json()
+    
+    users_id_invites = []
+    
+    for user in users:
+        if user["username"] in users_invites:
+            users_id_invites.append(user["id"])
+            
+    for user_id in users_id_invites:
+        requests.post(
+            "http://backend-invite:8000/invites",
+            json={
+                "user_id": user_id,
+                "event_id": response.json()["id"],
+                "status": "pending",
+            },
+            timeout=100,
+        )
 
     return redirect("/")
 
@@ -164,7 +195,8 @@ def login() -> Response:
         requests.post(
             "http://backend-auth:8000/auth/login",
             json={"username": req_username, "password": req_password},
-        timeout=100).status_code
+            timeout=100,
+        ).status_code
         == 200
     ):
         success = True
@@ -206,7 +238,7 @@ def register() -> Response:
         success = True
     else:
         success = False
-        
+
     save_to_session("success", success)
 
     if success:

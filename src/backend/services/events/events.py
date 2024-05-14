@@ -1,4 +1,6 @@
 # Imports
+from datetime import datetime
+
 import httpx
 from fastapi import APIRouter, HTTPException, Response
 
@@ -26,7 +28,7 @@ class EventReturn(BaseModel):
     organizer_id: int
     title: str
     description: str
-    date: str
+    date: datetime
     is_public: bool
     event_id: int
 
@@ -86,6 +88,13 @@ def create_event(event: Event) -> None:
         wrapper = Wrapper()
         # Check if organizer exists
         response = httpx.get(f"http://backend-auth:8000/users/{event.organizer_id}")
+        # Convert date to datetime object
+        try:
+            # Day/month/year
+            event.date = datetime.strptime(event.date, "%d/%m/%Y")
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail="Invalid date format") from e
+
         if response.status_code != 200:
             return Response(status_code=404, content="Organizer not found")
         else:

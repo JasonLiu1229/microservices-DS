@@ -37,9 +37,7 @@ def get_user_invite(user_id: int) -> list[InviteReturn]:
             return Response(status_code=404, content="User not found")
         else:
             invites = wrapper.get_invitations(user_id)
-            pending_invites = [
-                invite for invite in invites if invite["status"] == "pending"
-            ]
+            pending_invites = [invite for invite in invites if getattr(invite, "status") == "pending"]
             return [
                 {
                     "user_id": getattr(invite, "user_id"),

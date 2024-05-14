@@ -3,6 +3,7 @@
 
 import sqlalchemy.exc as db_exc
 from models import EventModel
+from datetime import datetime
 
 from utils import SessionSingleton
 
@@ -51,7 +52,7 @@ class Wrapper:
         organizer_id: int,
         title: str,
         description: str,
-        date: str,
+        date: datetime,
         is_public: bool,
     ) -> None:
         """Create event.
@@ -60,7 +61,7 @@ class Wrapper:
             organizer_id (int): organizer id
             title (str): title of event
             description (str): description of event
-            date (str): date of event
+            date (datetime): date of event
             is_public (bool): is event public
         """
         try:

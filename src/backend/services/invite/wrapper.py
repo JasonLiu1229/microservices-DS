@@ -35,7 +35,7 @@ class Wrapper:
             user_id (int): user id
 
         Returns:
-            list[dict]: list of invitations
+            list[InvitationModel]: list of invitations
         """
         try:
             invitations = (
