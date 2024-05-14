@@ -1,9 +1,10 @@
 """Database wrapper for the events service.
 """
 
+from datetime import datetime
+
 import sqlalchemy.exc as db_exc
 from models import EventModel
-from datetime import datetime
 
 from utils import SessionSingleton
 
@@ -54,7 +55,7 @@ class Wrapper:
         description: str,
         date: datetime,
         is_public: bool,
-    ) -> None:
+    ) -> EventModel:
         """Create event.
 
         Args:
@@ -63,6 +64,9 @@ class Wrapper:
             description (str): description of event
             date (datetime): date of event
             is_public (bool): is event public
+
+        Returns:
+            EventModel: event model
         """
         try:
             event = EventModel(
@@ -74,6 +78,7 @@ class Wrapper:
             )
             self.session.add(event)
             self.session.commit()
+            return event
         except db_exc.OperationalError as e:
             self.session.rollback()
             raise ValueError(f"Failed to create event: {e}") from e

@@ -89,7 +89,7 @@ class Wrapper:
             return True
         except ValueError:
             return False
-        
+
     def get_user(self, user_id: int) -> UserModel:
         """Get user.
 
@@ -100,11 +100,7 @@ class Wrapper:
             UserModel: user model
         """
         try:
-            user = (
-                self.session.query(UserModel)
-                .filter(UserModel.id == user_id)
-                .one()
-            )
+            user = self.session.query(UserModel).filter(UserModel.id == user_id).one()
             return user
         except db_exc.NoResultFound as e:
             raise ValueError(f"User not found: {e}") from e

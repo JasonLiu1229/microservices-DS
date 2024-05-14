@@ -2,7 +2,7 @@
 from datetime import datetime
 
 import httpx
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, HTTPException
 
 from models import EventModel
 from pydantic import BaseModel
@@ -70,6 +70,12 @@ def get_events() -> list[EventReturn]:
 def get_event(event_id: int) -> EventReturn:
     """
     Get event.
+
+    Args:
+        event_id (int): event id
+
+    Returns:
+        EventReturn: event
     """
     try:
         wrapper = Wrapper()
@@ -80,9 +86,15 @@ def get_event(event_id: int) -> EventReturn:
 
 
 @router.post("")
-def create_event(event: Event) -> None:
+def create_event(event: Event) -> EventReturn:
     """
     Create event.
+
+    Args:
+        event (Event): event
+
+    Returns:
+        EventReturn: event
     """
     try:
         wrapper = Wrapper()
@@ -96,15 +108,15 @@ def create_event(event: Event) -> None:
             raise HTTPException(status_code=400, detail="Invalid date format") from e
 
         if response.status_code != 200:
-            return Response(status_code=404, content="Organizer not found")
+            return HTTPException(status_code=404, detail="User not found")
         else:
-            wrapper.create_event(
+            event_return = wrapper.create_event(
                 organizer_id=event.organizer_id,
                 title=event.title,
                 description=event.description,
                 date=event.date,
                 is_public=event.is_public,
             )
-            return Response(status_code=200)
+            return event_parser(event_return)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e

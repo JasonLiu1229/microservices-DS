@@ -46,13 +46,18 @@ class Wrapper:
         except db_exc.NoResultFound as e:
             raise ValueError(f"Participations not found: {e}") from e
 
-    def create_participation(self, user_id: int, event_id: int, status: str) -> None:
+    def create_participation(
+        self, user_id: int, event_id: int, status: str
+    ) -> ParticipationModel:
         """Create participation.
 
         Args:
             user_id (int): user id
             event_id (int): event id
             status (str): participation status
+
+        Returns:
+            ParticipationModel: participation model
         """
         try:
             participation = ParticipationModel(
@@ -60,9 +65,10 @@ class Wrapper:
             )
             self.session.add(participation)
             self.session.commit()
+            return participation
         except db_exc.SQLAlchemyError as e:
             raise ValueError(f"Failed to create participation: {e}") from e
-        
+
     def update_participation(self, participation_id: int, status: str) -> None:
         """Update participation status.
 

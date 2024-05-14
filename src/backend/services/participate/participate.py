@@ -15,6 +15,7 @@ class Participation(BaseModel):
     event_id: int
     status: str
 
+
 class ParticipationReturn(BaseModel):
     """Participation model."""
 
@@ -23,10 +24,17 @@ class ParticipationReturn(BaseModel):
     status: str
     participation_id: int
 
+
 @router.get("")
 def get_user_participations(user_id: int) -> list[ParticipationReturn]:
     """
     Get user participations.
+
+    Args:
+        user_id (int): user id
+
+    Returns:
+        list[ParticipationReturn]: list of participations
     """
     try:
         wrapper = Wrapper()
@@ -48,21 +56,32 @@ def get_user_participations(user_id: int) -> list[ParticipationReturn]:
 
 
 @router.post("")
-def create_participation(participation: Participation) -> None:
+def create_participation(participation: Participation) -> ParticipationReturn:
     """
     Create participation.
+
+    Args:
+        participation (Participation): participation
+
+    Returns:
+        ParticipationReturn: participation
     """
     try:
         wrapper = Wrapper()
         response = httpx.get(f"http://backend-auth:8000/users/{participation.user_id}")
         if response.status_code != 200:
-            return Response(status_code=404, content="User not found")
-        wrapper.create_participation(
+            raise HTTPException(status_code=404, detail="User not found")
+        participate_return = wrapper.create_participation(
             user_id=participation.user_id,
             event_id=participation.event_id,
             status=participation.status,
         )
-        return Response(status_code=200)
+        return {
+            "user_id": getattr(participate_return, "user_id"),
+            "event_id": getattr(participate_return, "event_id"),
+            "status": getattr(participate_return, "status"),
+            "participation_id": getattr(participate_return, "id"),
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 

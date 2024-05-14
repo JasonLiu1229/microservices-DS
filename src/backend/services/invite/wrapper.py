@@ -47,13 +47,18 @@ class Wrapper:
         except db_exc.NoResultFound as e:
             raise ValueError(f"Invitations not found: {e}") from e
 
-    def create_invitation(self, user_id: int, event_id: int, invitee_id: int) -> None:
+    def create_invitation(
+        self, user_id: int, event_id: int, invitee_id: int
+    ) -> InvitationModel:
         """Create invitation.
 
         Args:
             user_id (int): user id
             event_id (int): event id
             invitee_id (int): invitee id
+
+        Returns:
+            InvitationModel: invitation model
         """
         try:
             invitation = InvitationModel(
@@ -61,6 +66,7 @@ class Wrapper:
             )
             self.session.add(invitation)
             self.session.commit()
+            return invitation
         except db_exc.OperationalError as e:
             self.session.rollback()
             raise ValueError(f"Failed to create invitation: {e}") from e

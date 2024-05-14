@@ -1,5 +1,5 @@
 # Imports
-from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from wrapper import Wrapper
@@ -13,12 +13,14 @@ class Calendar(BaseModel):
     user_id: int
     shared_with_id: int
 
+
 class CalendarReturn(BaseModel):
     """Calendar model."""
 
     user_id: int
     shared_with_id: int
     calendar_id: int
+
 
 @router.get("")
 def get_calendars(user_id: int) -> list[dict]:
@@ -41,13 +43,19 @@ def get_calendars(user_id: int) -> list[dict]:
 
 
 @router.post("")
-def create_share(calendar: Calendar) -> None:
+def create_share(calendar: Calendar) -> CalendarReturn:
     """
     Share calendar.
     """
     try:
         wrapper = Wrapper()
-        wrapper.create_share(user_id=calendar.user_id, share_id=calendar.shared_with_id)
-        return Response(status_code=200)
+        calendar_return = wrapper.create_share(
+            user_id=calendar.user_id, share_id=calendar.shared_with_id
+        )
+        return {
+            "user_id": getattr(calendar_return, "user_id"),
+            "shared_with_id": getattr(calendar_return, "shared_with_id"),
+            "calendar_id": getattr(calendar_return, "id"),
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e

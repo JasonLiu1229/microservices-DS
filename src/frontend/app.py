@@ -79,7 +79,7 @@ def create_event() -> Response:
     
     for user in users:
         if user["username"] in users_invites:
-            users_id_invites.append(user["id"])
+            users_id_invites.append(user["user_id"])
             
     for user_id in users_id_invites:
         requests.post(

@@ -37,7 +37,7 @@ class Wrapper:
         except db_exc.NoResultFound as e:
             raise ValueError(f"Calendars not found: {e}") from e
 
-    def create_share(self, user_id: int, share_id: int) -> None:
+    def create_share(self, user_id: int, share_id: int) -> CalendarModel:
         """Share calendar.
 
         Args:
@@ -48,6 +48,7 @@ class Wrapper:
             calendar = CalendarModel(user_id=user_id, share_id=share_id)
             self.session.add(calendar)
             self.session.commit()
+            return calendar
         except db_exc.OperationalError as e:
             self.session.rollback()
             raise ValueError(f"Failed to share calendar: {e}") from e
