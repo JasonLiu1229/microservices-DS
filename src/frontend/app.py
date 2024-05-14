@@ -289,7 +289,24 @@ def invites() -> str:
     # retrieve a list with all events you are invited to and have not yet responded to
     # ==============================
 
-    my_invites = [(1, "Test event", "Tomorrow", "Benjamin", "Private")]  # TODO: process
+    my_invites = []
+    
+    users = requests.get("http://backend-auth:8000/users", timeout=100).json()
+    
+    user_id = None
+    for user in users:
+        if user["username"] == username:
+            user_id = user["user_id"]
+            break
+        
+    user_invites = requests.get(f"http://backend-invitations:8000/invitations/{user_id}", timeout=100).json()
+    
+    for invite in user_invites:
+        if invite["status"] == "pending":
+            event = requests.get(f"http://backend-events:8000/events/{invite['event_id']}", timeout=100).json()
+            organizer = requests.get(f"http://backend-auth:8000/users/{event['organizer_id']}", timeout=100).json()
+            my_invites.append((event["event_id"], event["title"], event["date"], organizer["username"], "Public" if event["is_public"] else "Private"))
+    
     return render_template(
         "invites.html", username=username, password=password, invites=my_invites
     )
