@@ -26,6 +26,37 @@ class Wrapper:
     def close(self) -> None:
         """Close session."""
         self.session.close()
+    
+    def get_participation(self, participation_id: int) -> ParticipationModel:
+        """Get participation.
+
+        Args:
+            participation_id (int): participation id
+
+        Returns:
+            ParticipationModel: participation
+        """
+        try:
+            participation = (
+                self.session.query(ParticipationModel)
+                .filter(ParticipationModel.id == participation_id)
+                .one()
+            )
+            return participation
+        except db_exc.NoResultFound as e:
+            raise ValueError(f"Participation not found: {e}") from e
+        
+    def get_all_participations(self) -> list[ParticipationModel]:
+        """Get all participations.
+        
+        Returns:
+            list[ParticipationModel]: list of participations
+        """
+        try:
+            participations = self.session.query(ParticipationModel).all()
+            return participations
+        except db_exc.NoResultFound as e:
+            raise ValueError(f"Participations not found: {e}") from e
 
     def get_participations(self, user_id: int) -> list[ParticipationModel]:
         """Get all participations.

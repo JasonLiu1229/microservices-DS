@@ -26,22 +26,16 @@ class ParticipationReturn(BaseModel):
 
 
 @router.get("")
-def get_user_participations(user_id: int) -> list[ParticipationReturn]:
+def get_particpations() -> list[ParticipationReturn]:
     """
-    Get user participations.
-
-    Args:
-        user_id (int): user id
+    Get all participations.
 
     Returns:
-        list[ParticipationReturn]: list of participations
+        list[ParticipationReturn]: list of all participations
     """
     try:
         wrapper = Wrapper()
-        response = httpx.get(f"http://backend-auth:8000/users/{user_id}")
-        if response.status_code != 200:
-            return Response(status_code=404, content="User not found")
-        participations = wrapper.get_participations(user_id)
+        participations = wrapper.get_all_participations()
         return [
             {
                 "user_id": getattr(participation, "user_id"),
@@ -54,6 +48,28 @@ def get_user_participations(user_id: int) -> list[ParticipationReturn]:
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
+@router.get("/{participation_id}")
+def get_participation(participation_id: int) -> ParticipationReturn:
+    """
+    Get participation.
+
+    Args:
+        participation_id (int): participation id
+
+    Returns:
+        ParticipationReturn: participation
+    """
+    try:
+        wrapper = Wrapper()
+        participation = wrapper.get_participation(participation_id)
+        return {
+            "user_id": getattr(participation, "user_id"),
+            "event_id": getattr(participation, "event_id"),
+            "status": getattr(participation, "status"),
+            "participation_id": getattr(participation, "id"),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 @router.post("")
 def create_participation(participation: Participation) -> ParticipationReturn:
@@ -93,7 +109,7 @@ def update_participation_status(participation_id: int, status: str) -> None:
 
     Args:
         participation_id (int): participation id
-        status (str): participation status
+        status (str): participation status, can be "accepted", "declined" or "maybe"
     """
     try:
         wrapper = Wrapper()

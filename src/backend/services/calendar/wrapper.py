@@ -18,6 +18,37 @@ class Wrapper:
         """Close session."""
         self.session.close()
 
+    def get_all_calendar_shared(self) -> list[CalendarModel]:
+        """Get all shared calendars.
+
+        Returns:
+            list[CalendarModel]: list of shared calendars
+        """
+        try:
+            calendars = self.session.query(CalendarModel).all()
+            return calendars
+        except db_exc.NoResultFound as e:
+            raise ValueError(f"Calendars not found: {e}") from e
+
+    def get_calendar(self, calendar_id: int) -> CalendarModel:
+        """Get calendar shared based on calendar id.
+
+        Args:
+            calendar_id (int): calendare share id
+
+        Returns:
+            CalendarModel: calendar model which is shared
+        """
+        try:
+            calendar = (
+                self.session.query(CalendarModel)
+                .filter(CalendarModel.id == calendar_id)
+                .one()
+            )
+            return calendar
+        except db_exc.NoResultFound as e:
+            raise ValueError(f"Calendar not found: {e}") from e
+
     def get_shared_calendars(self, user_id: int) -> list[CalendarModel]:
         """Get all shared calendars.
 

@@ -1,4 +1,5 @@
 # Imports
+import httpx
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
@@ -23,13 +24,13 @@ class CalendarReturn(BaseModel):
 
 
 @router.get("")
-def get_calendars(user_id: int) -> list[dict]:
+def get_calendars() -> list[CalendarReturn]:
     """
     Get all shared calendars.
     """
     try:
         wrapper = Wrapper()
-        calendars = wrapper.get_shared_calendars(user_id)
+        calendars = wrapper.get_all_calendar_shared()
         return [
             {
                 "user_id": getattr(calendar, "user_id"),
@@ -42,6 +43,22 @@ def get_calendars(user_id: int) -> list[dict]:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
+@router.get("/{calendar_id}")
+def get_calendar(calendar_id: int) -> CalendarReturn:
+    """
+    Get shared calendar.
+    """
+    try:
+        calendar = Wrapper().get_calendar(calendar_id)
+        return {
+            "user_id": getattr(calendar, "user_id"),
+            "shared_with_id": getattr(calendar, "shared_with_id"),
+            "calendar_id": getattr(calendar, "id"),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
 @router.post("")
 def create_share(calendar: Calendar) -> CalendarReturn:
     """
@@ -49,6 +66,20 @@ def create_share(calendar: Calendar) -> CalendarReturn:
     """
     try:
         wrapper = Wrapper()
+        if (
+            httpx.get(f"http://backend:8000/api/users/{calendar.user_id}").status_code
+            == 404
+        ):
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        if (
+            httpx.get(
+                f"http://backend:8000/api/users/{calendar.shared_with_id}"
+            ).status_code
+            == 404
+        ):
+            raise HTTPException(status_code=404, detail="User not found")
+        
         calendar_return = wrapper.create_share(
             user_id=calendar.user_id, share_id=calendar.shared_with_id
         )

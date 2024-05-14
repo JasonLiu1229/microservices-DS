@@ -27,6 +27,18 @@ class Wrapper:
     def close(self) -> None:
         """Close session."""
         self.session.close()
+        
+    def get_all_invitations(self) -> list[InvitationModel]:
+        """Get all invitations.
+
+        Returns:
+            list[InvitationModel]: list of invitations
+        """
+        try:
+            invitations = self.session.query(InvitationModel).all()
+            return invitations
+        except db_exc.NoResultFound as e:
+            raise ValueError(f"Invitations not found: {e}") from e
 
     def get_invitations(self, user_id: int) -> list[InvitationModel]:
         """Get all invitations.

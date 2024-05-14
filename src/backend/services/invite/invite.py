@@ -21,42 +21,31 @@ class InviteReturn(BaseModel):
 
     user_id: int
     event_id: int
-    Invitee_id: int
+    invitee_id: int
     status: str
     invite_id: int
 
 
-@router.get("/{user_id}")
-def get_user_invite(user_id: int) -> list[InviteReturn]:
-    """
-    Get user pending invites.
-
-    Args:
-        user_id (int): user id of the invitee
+@router.get("")
+def get_invites() -> list[InviteReturn]:
+    """get all invites.
 
     Returns:
-        list[InviteReturn]: list of pending invites
+        list[InviteReturn]: list of all invites
     """
     try:
         wrapper = Wrapper()
-        response = httpx.get(f"http://backend-auth:8000/users/{user_id}")
-        if response.status_code != 200:
-            return HTTPException(status_code=404, detail="User not found")
-        else:
-            invites = wrapper.get_invitations(user_id)
-            pending_invites = [
-                invite for invite in invites if getattr(invite, "status") == "pending"
-            ]
-            return [
-                {
-                    "user_id": getattr(invite, "user_id"),
-                    "event_id": getattr(invite, "event_id"),
-                    "Invitee_id": getattr(invite, "invitee_id"),
-                    "status": getattr(invite, "status"),
-                    "invite_id": getattr(invite, "id"),
-                }
-                for invite in pending_invites
-            ]
+        invites = wrapper.get_invitations()
+        return [
+            {
+                "user_id": getattr(invite, "user_id"),
+                "event_id": getattr(invite, "event_id"),
+                "invitee_id": getattr(invite, "invitee_id"),
+                "status": getattr(invite, "status"),
+                "invite_id": getattr(invite, "id"),
+            }
+            for invite in invites
+        ]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
@@ -109,7 +98,7 @@ def create_invite(invite: Invite) -> InviteReturn:
             return {
                 "user_id": getattr(invitation_return, "user_id"),
                 "event_id": getattr(invitation_return, "event_id"),
-                "Invitee_id": getattr(invitation_return, "invitee_id"),
+                "invitee_id": getattr(invitation_return, "invitee_id"),
                 "status": getattr(invitation_return, "status"),
                 "invite_id": getattr(invitation_return, "id"),
             }
