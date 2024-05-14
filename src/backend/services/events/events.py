@@ -5,7 +5,7 @@ import httpx
 from fastapi import APIRouter, HTTPException
 
 from models import EventModel
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from wrapper import Wrapper
 
@@ -18,7 +18,7 @@ class Event(BaseModel):
     organizer_id: int
     title: str
     description: str
-    date: str
+    date: datetime = Field(..., description="Date in YYYY-MM-DD format")
     is_public: bool
 
 
@@ -100,12 +100,12 @@ def create_event(event: Event) -> EventReturn:
         wrapper = Wrapper()
         # Check if organizer exists
         response = httpx.get(f"http://backend-auth:8000/users/{event.organizer_id}")
-        # Convert date to datetime object
-        try:
-            # Day/month/year
-            event.date = datetime.strptime(event.date, "%d/%m/%Y")
-        except ValueError as e:
-            raise HTTPException(status_code=400, detail="Invalid date format") from e
+        # # Convert date to datetime object
+        # try:
+        #     # Year-month-day
+        #     event.date = datetime.strptime(event.date, "%Y-%m-%d")
+        # except ValueError as e:
+        #     raise HTTPException(status_code=400, detail="Invalid date format") from e
 
         if response.status_code != 200:
             return HTTPException(status_code=404, detail="User not found")

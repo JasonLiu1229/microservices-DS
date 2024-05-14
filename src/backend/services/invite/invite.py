@@ -13,7 +13,7 @@ class Invite(BaseModel):
 
     user_id: int
     event_id: int
-    Invitee_id: int
+    invitee_id: int
 
 
 class InviteReturn(BaseModel):
@@ -104,7 +104,7 @@ def create_invite(invite: Invite) -> InviteReturn:
             invitation_return = wrapper.create_invitation(
                 user_id=invite.user_id,
                 event_id=invite.event_id,
-                invitee_id=invite.Invitee_id,
+                invitee_id=invite.invitee_id,
             )
             return {
                 "user_id": getattr(invitation_return, "user_id"),

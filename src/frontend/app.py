@@ -49,9 +49,10 @@ def home() -> str:
 
 @app.route("/event", methods=["POST"])
 def create_event() -> Response:
-    title, description, publicprivate, invites = (
+    title, description, date, publicprivate, invites = (
         request.form["title"],
         request.form["description"],
+        request.form["date"],
         request.form["publicprivate"],
         request.form["invites"],
     )
@@ -60,34 +61,46 @@ def create_event() -> Response:
     #
     # Given some data, create an event and send out the invites.
     # ==========================
+    users = requests.get("http://backend-auth:8000/users", timeout=100).json()
+
+    current_user_id = 0
+    for user in users:
+        if user["username"] == username:
+            current_user_id = user["user_id"]
+            break
+
+    if current_user_id == 0:
+        return redirect("/")
+
     response = requests.post(
         "http://backend-events:8000/events",
         json={
-            "organizer_id": username,
+            "organizer_id": current_user_id,
             "title": title,
             "description": description,
-            "date": "Tomorrow",
+            "date": date,
             "is_public": publicprivate == "Public",
         },
         timeout=100,
     )
-    
-    users_invites = invites.split(";")
-    users = requests.get("http://backend-auth:8000/users", timeout=100).json()
-    
+
+    users_invites = invites.split(sep=";")
+
     users_id_invites = []
-    
+
+    event = response.json()
+
     for user in users:
         if user["username"] in users_invites:
             users_id_invites.append(user["user_id"])
-            
+
     for user_id in users_id_invites:
         requests.post(
-            "http://backend-invite:8000/invites",
+            "http://backend-invitations:8000/invitations",
             json={
                 "user_id": user_id,
-                "event_id": response.json()["id"],
-                "status": "pending",
+                "event_id": event["event_id"],
+                "invitee_id": current_user_id,
             },
             timeout=100,
         )

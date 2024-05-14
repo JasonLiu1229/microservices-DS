@@ -28,6 +28,11 @@ services:
     depends_on:
       db-users:
         condition: service_healthy
+    develop:
+      watch:
+        - action: sync
+          path: ./src/backend/services/auth
+          target: /app/backend
 
   backend-calendar:
     container_name: microservices-backend-calendar
@@ -56,6 +61,11 @@ services:
     depends_on:
       db-calendar-shares:
         condition: service_healthy
+    develop:
+      watch:
+        - action: sync
+          path: ./src/backend/services/calendar
+          target: /app/backend
 
   backend-events:
     container_name: microservices-backend-events
@@ -84,6 +94,11 @@ services:
     depends_on:
       db-events:
         condition: service_healthy
+    develop:
+      watch:
+        - action: sync
+          path: ./src/backend/services/events
+          target: /app/backend
 
   backend-invitations:
     container_name: microservices-backend-invitations
@@ -112,6 +127,11 @@ services:
     depends_on:
       db-invitations:
         condition: service_healthy
+    develop:
+      watch:
+        - action: sync
+          path: ./src/backend/services/invite
+          target: /app/backend
 
   backend-participations:
     container_name: microservices-backend-participations
@@ -140,6 +160,11 @@ services:
     depends_on:
       db-participations:
         condition: service_healthy
+    develop: 
+      watch:
+        - action: sync
+          path: ./src/backend/services/participate
+          target: /app/backend
 
   frontend:
     container_name: microservices-frontend
@@ -163,6 +188,11 @@ services:
         condition: service_healthy
       backend-participations:
         condition: service_healthy
+    develop:
+      watch:
+        - action: sync
+          path: ./src/frontend
+          target: /app
 
   db-users:
     container_name: microservices-db-users
