@@ -3,7 +3,7 @@ This file contains the auth routes for the FastAPI application.
 """
 
 # Imports
-from exceptions import CREDENTIALS_EXECPTION
+from exceptions import CREDENTIALS_EXECPTION, NOT_FOUND_EXCEPTION
 
 from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel
@@ -39,7 +39,7 @@ async def login_for_access_token(user: UserModel) -> Response:
         raise CREDENTIALS_EXECPTION
 
     if not auth_wrapper.check_user_exists(user.username):
-        raise CREDENTIALS_EXECPTION
+        raise NOT_FOUND_EXCEPTION
 
     if user.password != auth_wrapper.get_password(user.username):
         raise CREDENTIALS_EXECPTION

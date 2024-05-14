@@ -18,14 +18,14 @@ class Wrapper:
         """Close session."""
         self.session.close()
 
-    def get_shared_calendars(self, user_id: int) -> list[dict]:
+    def get_shared_calendars(self, user_id: int) -> list[CalendarModel]:
         """Get all shared calendars.
 
         Args:
             user_id (int): user id
 
         Returns:
-            list[dict]: list of shared calendars
+            list[CalendarModel]: list of shared calendars
         """
         try:
             calendars = (
@@ -33,7 +33,7 @@ class Wrapper:
                 .filter(CalendarModel.user_id == user_id)
                 .all()
             )
-            return [calendar.__dict__ for calendar in calendars]
+            return calendars
         except db_exc.NoResultFound as e:
             raise ValueError(f"Calendars not found: {e}") from e
 

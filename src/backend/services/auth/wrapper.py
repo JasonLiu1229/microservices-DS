@@ -51,15 +51,15 @@ class Wrapper:
         except db_exc.NoResultFound as e:
             raise ValueError(f"User not found: {e}") from e
 
-    def get_users(self) -> list[str]:
+    def get_users(self) -> list[UserModel]:
         """Get all users.
 
         Returns:
-            list[str]: list of usernames
+            list[Usermodel]: list of usernames
         """
         try:
             users = self.session.query(UserModel).all()
-            return [user.username for user in users]
+            return users
         except db_exc.NoResultFound as e:
             raise ValueError(f"Users not found: {e}") from e
 
@@ -90,14 +90,14 @@ class Wrapper:
         except ValueError:
             return False
         
-    def get_user(self, user_id: int) -> dict:
+    def get_user(self, user_id: int) -> UserModel:
         """Get user.
 
         Args:
             user_id (int): user id
 
         Returns:
-            dict: user
+            UserModel: user model
         """
         try:
             user = (
@@ -105,7 +105,7 @@ class Wrapper:
                 .filter(UserModel.id == user_id)
                 .one()
             )
-            return user.__dict__
+            return user
         except db_exc.NoResultFound as e:
             raise ValueError(f"User not found: {e}") from e
 

@@ -27,7 +27,7 @@ class Wrapper:
         """Close session."""
         self.session.close()
 
-    def get_participations(self, user_id: int) -> list[dict]:
+    def get_participations(self, user_id: int) -> list[ParticipationModel]:
         """Get all participations.
 
         Args:
@@ -42,7 +42,7 @@ class Wrapper:
                 .filter(ParticipationModel.user_id == user_id)
                 .all()
             )
-            return [participation.__dict__ for participation in participations]
+            return participations
         except db_exc.NoResultFound as e:
             raise ValueError(f"Participations not found: {e}") from e
 

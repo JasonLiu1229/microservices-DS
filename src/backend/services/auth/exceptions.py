@@ -12,9 +12,9 @@ EXPIRED_EXCEPTION = HTTPException(
     headers={"WWW-Authenticate": "Bearer"},
 )
 
-NOT_FOUND_EXCEPTION_TOKEN = HTTPException(
+NOT_FOUND_EXCEPTION = HTTPException(
     status_code=status.HTTP_404_NOT_FOUND,
-    detail="Token not found",
+    detail="Item not found",
 )
 
 INVALID_EXCEPTION_TOKEN = HTTPException(

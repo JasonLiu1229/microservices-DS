@@ -14,10 +14,19 @@ class Invite(BaseModel):
     user_id: int
     event_id: int
     Invitee_id: int
+    
+class InviteReturn(BaseModel):
+    """Invite model."""
+
+    user_id: int
+    event_id: int
+    Invitee_id: int
+    status: str
+    invite_id: int
 
 
 @router.get("/{user_id}")
-def get_user_invite(user_id: int) -> dict:
+def get_user_invite(user_id: int) -> list[InviteReturn]:
     """
     Get user pending invites.
     """
@@ -31,7 +40,16 @@ def get_user_invite(user_id: int) -> dict:
             pending_invites = [
                 invite for invite in invites if invite["status"] == "pending"
             ]
-            return Response(status_code=200, content=pending_invites)
+            return [
+                {
+                    "user_id": getattr(invite, "user_id"),
+                    "event_id": getattr(invite, "event_id"),
+                    "Invitee_id": getattr(invite, "invitee_id"),
+                    "status": getattr(invite, "status"),
+                    "invite_id": getattr(invite, "id"),
+                }
+                for invite in pending_invites
+            ]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 

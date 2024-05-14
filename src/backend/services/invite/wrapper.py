@@ -28,7 +28,7 @@ class Wrapper:
         """Close session."""
         self.session.close()
 
-    def get_invitations(self, user_id: int) -> list[dict]:
+    def get_invitations(self, user_id: int) -> list[InvitationModel]:
         """Get all invitations.
 
         Args:
@@ -43,7 +43,7 @@ class Wrapper:
                 .filter(InvitationModel.user_id == user_id)
                 .all()
             )
-            return [invitation.__dict__ for invitation in invitations]
+            return invitations
         except db_exc.NoResultFound as e:
             raise ValueError(f"Invitations not found: {e}") from e
 
@@ -106,7 +106,7 @@ class Wrapper:
             self.session.rollback()
             raise ValueError(f"Failed to update invitation: {e}") from e
 
-    def get_invite(self, invite_id: int) -> dict:
+    def get_invite(self, invite_id: int) -> InvitationModel:
         """Get invite.
 
         Args:
@@ -121,6 +121,6 @@ class Wrapper:
                 .filter(InvitationModel.id == invite_id)
                 .one()
             )
-            return invite.__dict__
+            return invite
         except db_exc.NoResultFound as e:
             raise ValueError(f"Invite not found: {e}") from e

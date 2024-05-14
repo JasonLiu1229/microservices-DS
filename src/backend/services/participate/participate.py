@@ -15,9 +15,16 @@ class Participation(BaseModel):
     event_id: int
     status: str
 
+class ParticipationReturn(BaseModel):
+    """Participation model."""
+
+    user_id: int
+    event_id: int
+    status: str
+    participation_id: int
 
 @router.get("")
-def get_user_participations(user_id: int) -> list[dict]:
+def get_user_participations(user_id: int) -> list[ParticipationReturn]:
     """
     Get user participations.
     """
@@ -27,7 +34,15 @@ def get_user_participations(user_id: int) -> list[dict]:
         if response.status_code != 200:
             return Response(status_code=404, content="User not found")
         participations = wrapper.get_participations(user_id)
-        return Response(status_code=200, content=participations)
+        return [
+            {
+                "user_id": getattr(participation, "user_id"),
+                "event_id": getattr(participation, "event_id"),
+                "status": getattr(participation, "status"),
+                "participation_id": getattr(participation, "id"),
+            }
+            for participation in participations
+        ]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 

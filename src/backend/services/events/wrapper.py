@@ -17,7 +17,7 @@ class Wrapper:
         """Close session."""
         self.session.close()
 
-    def get_event(self, event_id: int) -> dict:
+    def get_event(self, event_id: int) -> EventModel:
         """Get event.
 
         Args:
@@ -30,19 +30,19 @@ class Wrapper:
             event = (
                 self.session.query(EventModel).filter(EventModel.id == event_id).one()
             )
-            return event.__dict__
+            return event
         except db_exc.NoResultFound as e:
             raise ValueError(f"Event not found: {e}") from e
 
-    def get_events(self) -> list[dict]:
+    def get_events(self) -> list[EventModel]:
         """Get all events.
 
         Returns:
-            list[dict]: list of events
+            dict: list of events
         """
         try:
             events = self.session.query(EventModel).all()
-            return [event.__dict__ for event in events]
+            return events
         except db_exc.NoResultFound as e:
             raise ValueError(f"Events not found: {e}") from e
 
