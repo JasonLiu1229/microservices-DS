@@ -40,7 +40,25 @@ def home() -> str:
         # Try to keep in mind failure of the underlying microservice
         # =================================
 
-        public_events = [("Test event", "Tomorrow", "Benjamin")]  # TODO: call
+        public_events = []
+
+        events = requests.get("http://backend-events:8000/events", timeout=100).json()
+
+        for event in events:
+            if event["is_public"]:
+                public_events.append(
+                    (event["title"], event["date"], event["organizer_id"])
+                )
+
+        users = requests.get("http://backend-auth:8000/users", timeout=100).json()
+        formatted_events = []
+        for event in public_events:
+            for user in users:
+                if user["user_id"] == event[2]:
+                    formatted_events.append((event[0], event[1], user["username"]))
+                    break
+
+        public_events = formatted_events
 
         return render_template(
             "home.html", username=username, password=password, events=public_events
@@ -63,13 +81,13 @@ def create_event() -> Response:
     # ==========================
     users = requests.get("http://backend-auth:8000/users", timeout=100).json()
 
-    current_user_id = 0
+    current_user_id = None
     for user in users:
         if user["username"] == username:
             current_user_id = user["user_id"]
             break
 
-    if current_user_id == 0:
+    if current_user_id == None:
         return redirect("/")
 
     response = requests.post(
@@ -79,7 +97,7 @@ def create_event() -> Response:
             "title": title,
             "description": description,
             "date": date,
-            "is_public": publicprivate == "Public",
+            "is_public": publicprivate == "public",
         },
         timeout=100,
     )
