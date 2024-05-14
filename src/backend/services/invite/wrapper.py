@@ -40,7 +40,7 @@ class Wrapper:
         try:
             invitations = (
                 self.session.query(InvitationModel)
-                .filter(InvitationModel.user_id == user_id)
+                .filter(InvitationModel.invitee_id == user_id)
                 .all()
             )
             return invitations

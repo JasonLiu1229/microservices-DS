@@ -116,9 +116,9 @@ def create_event() -> Response:
         requests.post(
             "http://backend-invitations:8000/invitations",
             json={
-                "user_id": user_id,
+                "user_id": current_user_id,
                 "event_id": event["event_id"],
-                "invitee_id": current_user_id,
+                "invitee_id": user_id,
             },
             timeout=100,
         )
@@ -192,8 +192,25 @@ def view_event(eventid) -> str:
     # Retrieve additional information for a certain event parameterized by an id. The webpage expects a (title, date, organizer, status, (invitee, participating)) tuples.
     # Try to keep in mind failure of the underlying microservice
     # =================================
-
-    success = True  # TODO: this might change depending on whether you can see the event (public, or private but invited)
+    
+    user_id = None 
+    users = requests.get("http://backend-auth:8000/users", timeout=100).json()
+    for user in users:
+        if user["username"] == username:
+            user_id = user["user_id"]
+            break
+    
+    event = requests.get(f"http://backend-events:8000/events/{eventid}", timeout=100).json()
+    
+    if event["is_public"]:
+        success = True
+    else:
+        invites = requests.get(f"http://backend-invitations:8000/invitations/{user_id}", timeout=100).json()
+        success = False
+        for invite in invites:
+            if invite["event_id"] == eventid:
+                success = True
+                break
 
     if success:
         event = [
@@ -290,23 +307,37 @@ def invites() -> str:
     # ==============================
 
     my_invites = []
-    
+
     users = requests.get("http://backend-auth:8000/users", timeout=100).json()
-    
+
     user_id = None
     for user in users:
         if user["username"] == username:
             user_id = user["user_id"]
             break
-        
-    user_invites = requests.get(f"http://backend-invitations:8000/invitations/{user_id}", timeout=100).json()
-    
+
+    user_invites = requests.get(
+        f"http://backend-invitations:8000/invitations/{user_id}", timeout=100
+    ).json()
+
     for invite in user_invites:
         if invite["status"] == "pending":
-            event = requests.get(f"http://backend-events:8000/events/{invite['event_id']}", timeout=100).json()
-            organizer = requests.get(f"http://backend-auth:8000/users/{event['organizer_id']}", timeout=100).json()
-            my_invites.append((event["event_id"], event["title"], event["date"], organizer["username"], "Public" if event["is_public"] else "Private"))
-    
+            event = requests.get(
+                f"http://backend-events:8000/events/{invite['event_id']}", timeout=100
+            ).json()
+            organizer = requests.get(
+                f"http://backend-auth:8000/users/{event['organizer_id']}", timeout=100
+            ).json()
+            my_invites.append(
+                (
+                    event["event_id"],
+                    event["title"],
+                    event["date"],
+                    organizer["username"],
+                    "Public" if event["is_public"] else "Private",
+                )
+            )
+
     return render_template(
         "invites.html", username=username, password=password, invites=my_invites
     )

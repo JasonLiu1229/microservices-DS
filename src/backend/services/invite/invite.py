@@ -32,7 +32,7 @@ def get_user_invite(user_id: int) -> list[InviteReturn]:
     Get user pending invites.
 
     Args:
-        user_id (int): user id
+        user_id (int): user id of the invitee
 
     Returns:
         list[InviteReturn]: list of pending invites
