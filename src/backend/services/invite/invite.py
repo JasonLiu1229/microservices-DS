@@ -1,6 +1,6 @@
 # Imports
 import httpx
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, HTTPException, Query, Response
 from pydantic import BaseModel
 
 from wrapper import Wrapper
@@ -35,7 +35,7 @@ def get_invites() -> list[InviteReturn]:
     """
     try:
         wrapper = Wrapper()
-        invites = wrapper.get_invitations()
+        invites = wrapper.get_all_invitations()
         return [
             {
                 "user_id": getattr(invite, "user_id"),
@@ -46,6 +46,123 @@ def get_invites() -> list[InviteReturn]:
             }
             for invite in invites
         ]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@router.get("/{invite_id}")
+def get_invite(invite_id: int) -> InviteReturn:
+    """Get invite.
+
+    Args:
+        invite_id (int): invite id
+
+    Returns:
+        InviteReturn: invite
+    """
+    try:
+        invite = Wrapper().get_invitation(invite_id)
+        return {
+            "user_id": getattr(invite, "user_id"),
+            "event_id": getattr(invite, "event_id"),
+            "invitee_id": getattr(invite, "invitee_id"),
+            "status": getattr(invite, "status"),
+            "invite_id": getattr(invite, "id"),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@router.get("")
+def get_invitations_user(user_id: int) -> list[InviteReturn]:
+    """Get all invitations.
+
+    Args:
+        user_id (int): user id
+
+    Returns:
+        list[InviteReturn]: list of invitations
+    """
+    try:
+        wrapper = Wrapper()
+        
+        if httpx.get(f"http://backend-auth:8000/users/{user_id}").status_code != 200:
+            return HTTPException(status_code=404, detail="User not found")
+        
+        invitations = wrapper.get_invitations_by_user(user_id)
+        return [
+            {
+                "user_id": getattr(invitation, "user_id"),
+                "event_id": getattr(invitation, "event_id"),
+                "invitee_id": getattr(invitation, "invitee_id"),
+                "status": getattr(invitation, "status"),
+                "invite_id": getattr(invitation, "id"),
+            }
+            for invitation in invitations
+        ]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@router.get("")
+def get_invitations_event(event_id: int) -> list[InviteReturn]:
+    """Get all invitations.
+
+    Args:
+        event_id (int): event id
+
+    Returns:
+        list[InviteReturn]: list of invitations
+    """
+    try:
+        wrapper = Wrapper()
+        
+        if httpx.get(f"http://backend-events:8000/events/{event_id}").status_code != 200:
+            return HTTPException(status_code=404, detail="Event not found")
+        
+        invitations = wrapper.get_invitations_by_event(event_id)
+        return [
+            {
+                "user_id": getattr(invitation, "user_id"),
+                "event_id": getattr(invitation, "event_id"),
+                "invitee_id": getattr(invitation, "invitee_id"),
+                "status": getattr(invitation, "status"),
+                "invite_id": getattr(invitation, "id"),
+            }
+            for invitation in invitations
+        ]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@router.get("")
+def get_invitations_user_event(invitee_id: int, event_id: int) -> InviteReturn:
+    """Get all invitations.
+
+    Args:
+        invitee_id (int): invitee id
+        event_id (int): event id
+
+    Returns:
+        list[InviteReturn]: list of invitations
+    """
+    try:
+        wrapper = Wrapper()
+        
+        if httpx.get(f"http://backend-auth:8000/users/{invitee_id}").status_code != 200:
+            return HTTPException(status_code=404, detail="User not found")
+        
+        if httpx.get(f"http://backend-events:8000/events/{event_id}").status_code != 200:
+            return HTTPException(status_code=404, detail="Event not found")
+        
+        invitation = wrapper.get_invitations_by_user_event(invitee_id, event_id)
+        return {
+            "user_id": getattr(invitation, "user_id"),
+            "event_id": getattr(invitation, "event_id"),
+            "invitee_id": getattr(invitation, "invitee_id"),
+            "status": getattr(invitation, "status"),
+            "invite_id": getattr(invitation, "id"),
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 

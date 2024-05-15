@@ -36,6 +36,9 @@ def get_userId(username: str) -> int | None:
 
 @app.route("/")
 def home() -> str:
+    """Home page of the application.
+    """
+    
     global username
 
     if username is None:
@@ -136,16 +139,14 @@ def create_event() -> Response:
 
 @app.route("/calendar", methods=["GET", "POST"])
 def calendar() -> str:
+    """
+    Retrieve the calendar of a certain user.
+
+    The webpage expects a list of (id, title, date, organizer, status, Public/Private) tuples.
+    """
     calendar_user = (
         request.form["calendar_user"] if "calendar_user" in request.form else username
     )
-
-    # ================================
-    # FEATURE (calendar based on username)
-    #
-    # Retrieve the calendar of a certain user. The webpage expects a list of (id, title, date, organizer, status, Public/Private) tuples.
-    # Try to keep in mind failure of the underlying microservice
-    # =================================
 
     success = True if calendar_user == username else False
 
@@ -153,7 +154,7 @@ def calendar() -> str:
     user_id = get_userId(username)
 
     all_calendars = requests.get(
-        "http://backend-share:8000/calendar", timeout=100
+        "http://backend-calendar:8000/calendars", timeout=100
     ).json()
 
     for calendar_shared in all_calendars:
@@ -212,6 +213,8 @@ def calendar() -> str:
 
 @app.route("/share", methods=["GET"])
 def share_page() -> str:
+    """Share page of the application.
+    """
     return render_template(
         "share.html", username=username, password=password, success=None
     )
@@ -219,6 +222,8 @@ def share_page() -> str:
 
 @app.route("/share", methods=["POST"])
 def share() -> str:
+    """Share a calendar with a user.
+    """
     share_user = request.form["username"]
 
     # ========================================
@@ -231,8 +236,8 @@ def share() -> str:
     user_id = get_userId(username)
 
     response = requests.post(
-        "http://backend-share:8000/shares",
-        json={"user_id": user_id, "shared_user_id": share_user},
+        "http://backend-calendar:8000/calendars",
+        json={"user_id": user_id, "shared_with_id": share_user},
         timeout=100,
     )
 
@@ -259,25 +264,19 @@ def view_event(eventid) -> str:
     event = requests.get(
         f"http://backend-events:8000/events/{eventid}", timeout=100
     ).json()
+    
+    int_event_id = int(eventid)
 
     if event["is_public"]:
         success = True
     else:
         invites_output = requests.get(
-            f"http://backend-invitations:8000/invitations", timeout=100
+            f"http://backend-invitations:8000/invitations?event_id={int_event_id}&invitee_id={user_id}",
+            timeout=100,
         ).json()
-
-        user_invites = []
-
-        for invite in invites_output:
-            if invite["user_id"] == user_id:
-                user_invites.append(invite)
-
-        success = False
-        for invite in user_invites:
-            if invite["event_id"] == eventid:
-                success = True
-                break
+        
+        if len(invites_output) > 0:
+            success = True
 
     if success:
         all_participants = requests.get(
@@ -287,12 +286,14 @@ def view_event(eventid) -> str:
         event_participants = []
 
         for participants in all_participants:
-            if participants["event_id"] == eventid:
+            if participants["event_id"] == int_event_id:
                 event_participants.append(participants)
 
         event_participants = [
             (
-                participant["user_id"],
+                requests.get(
+                    f"http://backend-auth:8000/users/{participant['user_id']}", timeout=100
+                ).json()["username"],
                 (
                     "Participating"
                     if participant["status"] == "accepted"
@@ -405,9 +406,15 @@ def invites() -> str:
 
     user_id = get_userId(username)
 
-    user_invites = requests.get(
-        f"http://backend-invitations:8000/invitations/{user_id}", timeout=100
+    all_invites = requests.get(
+        "http://backend-invitations:8000/invitations", timeout=100
     ).json()
+    
+    user_invites = []
+    
+    for invite in all_invites:
+        if invite["invitee_id"] == user_id:
+            user_invites.append(invite)
 
     for invite in user_invites:
         if invite["status"] == "pending":
@@ -443,38 +450,31 @@ def process_invite() -> Response:
     # =======================
 
     user_id = get_userId(username)
-
-    invites_output = requests.get(
-        f"http://backend-invitations:8000/invitations", timeout=100
-    ).json()
-
-    user_invites = []
-
-    for invite in invites_output:
-        if invite["user_id"] == user_id:
-            user_invites.append(invite)
-
-    invite = None
-    for invite in user_invites:
-        if invite["event_id"] == eventId:
-            break
+    int_event_id = int(eventId)
+    
+    response = requests.get(
+        f"http://backend-invitations:8000/invitations?event_id={int_event_id}&invitee_id={user_id}",
+        timeout=100,
+    )
+    
+    invite_event = None
+    if response.status_code == 200:
+        invite_event = response.json()[0]
 
     new_status = (
         "accepted"
-        if status == "accept"
-        else "declined" if status == "don't accept" else "maybe"
+        if status == "Participate"
+        else "declined" if status == "Don't Participate" else "maybe"
     )
 
-    if invite is None:
-        redirect("/invites")
-    else:
+    if invite_event is not None:
         requests.put(
-            f"http://backend-invitations:8000/invitations/{invite['invite_id']}/status/{new_status}",
+            f"http://backend-invitations:8000/invitations/{invite_event['invite_id']}/status/{new_status}",
             timeout=100,
         )
         requests.post(
-            "http://backend-participate:8000/participations",
-            json={"user_id": user_id, "event_id": eventId, "status": new_status},
+            "http://backend-participations:8000/participations",
+            json={"user_id": user_id, "event_id": int_event_id, "status": new_status},
             timeout=100,
         )
 

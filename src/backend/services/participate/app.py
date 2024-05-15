@@ -9,4 +9,4 @@ from fastapi import FastAPI
 app = FastAPI()
 
 app.include_router(healthcheck.router, prefix="/health", tags=["health_check"])
-app.include_router(participate.router, prefix="/participate", tags=["participate"])
+app.include_router(participate.router, prefix="/participations", tags=["participations"])

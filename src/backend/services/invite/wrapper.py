@@ -40,14 +40,14 @@ class Wrapper:
         except db_exc.NoResultFound as e:
             raise ValueError(f"Invitations not found: {e}") from e
 
-    def get_invitations(self, user_id: int) -> list[InvitationModel]:
+    def get_invitations_by_user(self, user_id: int) -> list[InvitationModel]:
         """Get all invitations.
 
         Args:
             user_id (int): user id
 
         Returns:
-            list[InvitationModel]: list of invitations
+            list[InvitationModel]: list of invitations based on user id
         """
         try:
             invitations = (
@@ -58,6 +58,67 @@ class Wrapper:
             return invitations
         except db_exc.NoResultFound as e:
             raise ValueError(f"Invitations not found: {e}") from e
+    
+    def get_invitations_by_event(self, event_id: int) -> list[InvitationModel]:
+        """Get all invitations.
+
+        Args:
+            event_id (int): event id
+
+        Returns:
+            list[InvitationModel]: list of invitations based on event id
+        """
+        try:
+            invitations = (
+                self.session.query(InvitationModel)
+                .filter(InvitationModel.event_id == event_id)
+                .all()
+            )
+            return invitations
+        except db_exc.NoResultFound as e:
+            raise ValueError(f"Invitations not found: {e}") from e
+    
+    def get_invitations_by_user_event(
+        self, user_id: int, event_id: int
+    ) -> InvitationModel:
+        """Get all invitations.
+
+        Args:
+            user_id (int): user id
+            event_id (int): event id
+
+        Returns:
+            InvitationModel: invitation
+        """
+        try:
+            invitation = (
+                self.session.query(InvitationModel)
+                .filter(InvitationModel.invitee_id == user_id)
+                .filter(InvitationModel.event_id == event_id)
+                .one()
+            )
+            return invitation
+        except db_exc.NoResultFound as e:
+            raise ValueError(f"Invitations not found: {e}") from e
+    
+    def get_invitation(self, invitation_id: int) -> InvitationModel:
+        """Get invitation.
+
+        Args:
+            invitation_id (int): invitation id
+
+        Returns:
+            InvitationModel: invitation
+        """
+        try:
+            invitation = (
+                self.session.query(InvitationModel)
+                .filter(InvitationModel.id == invitation_id)
+                .one()
+            )
+            return invitation
+        except db_exc.NoResultFound as e:
+            raise ValueError(f"Invitation not found: {e}") from e
 
     def create_invitation(
         self, user_id: int, event_id: int, invitee_id: int
