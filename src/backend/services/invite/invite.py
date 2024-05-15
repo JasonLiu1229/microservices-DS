@@ -82,9 +82,6 @@ def get_invitations_user(user_id: int) -> list[InviteReturn]:
     try:
         wrapper = Wrapper()
         
-        if httpx.get(f"http://backend-auth:8000/users/{user_id}").status_code != 200:
-            return HTTPException(status_code=404, detail="User not found")
-        
         invitations = wrapper.get_invitations_by_user(user_id)
         return [
             {
@@ -111,9 +108,6 @@ def get_invitations_event(event_id: int) -> list[InviteReturn]:
     """
     try:
         wrapper = Wrapper()
-        
-        if httpx.get(f"http://backend-events:8000/events/{event_id}").status_code != 200:
-            return HTTPException(status_code=404, detail="Event not found")
         
         invitations = wrapper.get_invitations_by_event(event_id)
         return [
@@ -142,12 +136,6 @@ def get_invitations_user_event(invitee_id: int, event_id: int) -> InviteReturn:
     """
     try:
         wrapper = Wrapper()
-        
-        if httpx.get(f"http://backend-auth:8000/users/{invitee_id}").status_code != 200:
-            return HTTPException(status_code=404, detail="User not found")
-        
-        if httpx.get(f"http://backend-events:8000/events/{event_id}").status_code != 200:
-            return HTTPException(status_code=404, detail="Event not found")
         
         invitation = wrapper.get_invitations_by_user_event(invitee_id, event_id)
         return {
@@ -217,25 +205,17 @@ def create_invite(invite: Invite) -> InviteReturn:
     try:
         wrapper = Wrapper()
 
-        response = httpx.get(f"http://backend-auth:8000/users/{invite.user_id}")
-        if response.status_code != 200:
-            return HTTPException(status_code=404, detail="User not found")
-
-        response = httpx.get(f"http://backend-events:8000/events/{invite.event_id}")
-        if response.status_code != 200:
-            return HTTPException(status_code=404, detail="Event not found")
-        else:
-            invitation_return = wrapper.create_invitation(
-                user_id=invite.user_id,
-                event_id=invite.event_id,
-                invitee_id=invite.invitee_id,
-            )
-            return {
-                "user_id": getattr(invitation_return, "user_id"),
-                "event_id": getattr(invitation_return, "event_id"),
-                "invitee_id": getattr(invitation_return, "invitee_id"),
-                "status": getattr(invitation_return, "status"),
-                "invite_id": getattr(invitation_return, "id"),
-            }
+        invitation_return = wrapper.create_invitation(
+            user_id=invite.user_id,
+            event_id=invite.event_id,
+            invitee_id=invite.invitee_id,
+        )
+        return {
+            "user_id": getattr(invitation_return, "user_id"),
+            "event_id": getattr(invitation_return, "event_id"),
+            "invitee_id": getattr(invitation_return, "invitee_id"),
+            "status": getattr(invitation_return, "status"),
+            "invite_id": getattr(invitation_return, "id"),
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e

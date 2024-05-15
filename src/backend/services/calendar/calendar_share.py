@@ -66,19 +66,6 @@ def create_share(calendar: Calendar) -> CalendarReturn:
     """
     try:
         wrapper = Wrapper()
-        if (
-            httpx.get(f"http://backend-auth:8000/users/{calendar.user_id}").status_code
-            == 404
-        ):
-            raise HTTPException(status_code=404, detail="User not found")
-
-        if (
-            httpx.get(
-                f"http://backend-auth:8000/users/{calendar.shared_with_id}"
-            ).status_code
-            == 404
-        ):
-            raise HTTPException(status_code=404, detail="User not found")
 
         calendar_return = wrapper.create_share(
             user_id=calendar.user_id, share_id=calendar.shared_with_id

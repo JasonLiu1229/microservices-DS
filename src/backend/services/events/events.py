@@ -98,18 +98,13 @@ def create_event(event: Event) -> EventReturn:
     """
     try:
         wrapper = Wrapper()
-        # Check if organizer exists
-        response = httpx.get(f"http://backend-auth:8000/users/{event.organizer_id}")
-        if response.status_code != 200:
-            return HTTPException(status_code=404, detail="User not found")
-        else:
-            event_return = wrapper.create_event(
-                organizer_id=event.organizer_id,
-                title=event.title,
-                description=event.description,
-                date=event.date,
-                is_public=event.is_public,
-            )
-            return event_parser(event_return)
+        event_return = wrapper.create_event(
+            organizer_id=event.organizer_id,
+            title=event.title,
+            description=event.description,
+            date=event.date,
+            is_public=event.is_public,
+        )
+        return event_parser(event_return)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e

@@ -161,9 +161,6 @@ def create_participation(participation: Participation) -> ParticipationReturn:
     """
     try:
         wrapper = Wrapper()
-        response = httpx.get(f"http://backend-auth:8000/users/{participation.user_id}")
-        if response.status_code != 200:
-            raise HTTPException(status_code=404, detail="User not found")
         participate_return = wrapper.create_participation(
             user_id=participation.user_id,
             event_id=participation.event_id,
