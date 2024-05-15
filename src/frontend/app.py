@@ -34,11 +34,10 @@ def get_userId(username: str) -> int | None:
     return None
 
 
-@app.route("/")
+@app.route("/",  methods=["GET"])
 def home() -> str:
-    """Home page of the application.
-    """
-    
+    """Home page of the application."""
+
     global username
 
     if username is None:
@@ -47,7 +46,7 @@ def home() -> str:
         # ================================
         # FEATURE (list of public events)
         #
-        # Retrieve the list of all public events. The webpage expects a list of (title, date, organizer) tuples.
+        # Retrieve the list of all public events. The webpage expects a list of (event_id, title, date, organizer) tuples.
         # Try to keep in mind failure of the underlying microservice
         # =================================
 
@@ -58,15 +57,22 @@ def home() -> str:
         for event in events:
             if event["is_public"]:
                 public_events.append(
-                    (event["title"], event["date"], event["organizer_id"])
+                    (
+                        event["event_id"],
+                        event["title"],
+                        event["date"],
+                        event["organizer_id"],
+                    )
                 )
 
         users = requests.get("http://backend-auth:8000/users", timeout=100).json()
         formatted_events = []
         for event in public_events:
             for user in users:
-                if user["user_id"] == event[2]:
-                    formatted_events.append((event[0], event[1], user["username"]))
+                if user["user_id"] == event[3]:
+                    formatted_events.append(
+                        (event[0], event[1], event[2], user["username"])
+                    )
                     break
 
         public_events = formatted_events
@@ -74,6 +80,77 @@ def home() -> str:
         return render_template(
             "home.html", username=username, password=password, events=public_events
         )
+
+
+@app.route("/", methods=["POST"])
+def process_public_event() -> Response:
+    event_id, status = request.json["event"], request.json["status"]
+
+    # ================================
+    # FEATURE (participate in a public event)
+    #
+    # Participate in a public event. Return success = true / false depending on whether the participation is succesful.
+    # ================================
+    int_event_id = int(event_id)
+
+    user_id = get_userId(username)
+
+    new_status = (
+        "accepted"
+        if status == "Participate"
+        else "declined" if status == "Don't Participate" else "maybe"
+    )
+
+    if user_id is None:
+        return redirect("/")
+    
+    # check if we also have an invite for this event
+    invites_output = requests.get(
+        f"http://backend-invitations:8000/invitations?event_id={int_event_id}&invitee_id={user_id}",
+        timeout=100,
+    ).json()
+
+    if len(invites_output) > 0:
+        invite = invites_output[0]
+        if invite["status"] == "pending":
+            requests.put(
+                f"http://backend-invitations:8000/invitations/{invite['invite_id']}/status/{new_status}",
+                timeout=100,
+            )
+            requests.post(
+                "http://backend-participations:8000/participations",
+                json={
+                    "user_id": user_id,
+                    "event_id": int_event_id,
+                    "status": new_status,
+                },
+                timeout=100,
+            )
+    else:
+        # check if we have already participated in this event
+        participations_output = requests.get(
+            f"http://backend-participations:8000/participations?event_id={int_event_id}&user_id={user_id}",
+            timeout=100,
+        ).json()
+
+        if len(participations_output) == 0:
+            requests.post(
+                "http://backend-participations:8000/participations",
+                json={
+                    "user_id": user_id,
+                    "event_id": int_event_id,
+                    "status": new_status,
+                },
+                timeout=100,
+            )
+        elif len(participations_output) == 1:
+            if participations_output[0]["status"] != new_status:
+                requests.put(
+                    f"http://backend-participations:8000/participations/{participations_output[0]['participation_id']}/status/{new_status}",
+                    timeout=100,
+                )
+
+    return redirect("/")
 
 
 @app.route("/event", methods=["POST"])
@@ -213,8 +290,7 @@ def calendar() -> str:
 
 @app.route("/share", methods=["GET"])
 def share_page() -> str:
-    """Share page of the application.
-    """
+    """Share page of the application."""
     return render_template(
         "share.html", username=username, password=password, success=None
     )
@@ -222,8 +298,7 @@ def share_page() -> str:
 
 @app.route("/share", methods=["POST"])
 def share() -> str:
-    """Share a calendar with a user.
-    """
+    """Share a calendar with a user."""
     share_user = request.form["username"]
 
     # ========================================
@@ -264,7 +339,7 @@ def view_event(eventid) -> str:
     event = requests.get(
         f"http://backend-events:8000/events/{eventid}", timeout=100
     ).json()
-    
+
     int_event_id = int(eventid)
 
     if event["is_public"]:
@@ -274,7 +349,7 @@ def view_event(eventid) -> str:
             f"http://backend-invitations:8000/invitations?event_id={int_event_id}&invitee_id={user_id}",
             timeout=100,
         ).json()
-        
+
         if len(invites_output) > 0:
             success = True
 
@@ -292,7 +367,8 @@ def view_event(eventid) -> str:
         event_participants = [
             (
                 requests.get(
-                    f"http://backend-auth:8000/users/{participant['user_id']}", timeout=100
+                    f"http://backend-auth:8000/users/{participant['user_id']}",
+                    timeout=100,
                 ).json()["username"],
                 (
                     "Participating"
@@ -409,9 +485,9 @@ def invites() -> str:
     all_invites = requests.get(
         "http://backend-invitations:8000/invitations", timeout=100
     ).json()
-    
+
     user_invites = []
-    
+
     for invite in all_invites:
         if invite["invitee_id"] == user_id:
             user_invites.append(invite)
@@ -451,12 +527,12 @@ def process_invite() -> Response:
 
     user_id = get_userId(username)
     int_event_id = int(eventId)
-    
+
     response = requests.get(
         f"http://backend-invitations:8000/invitations?event_id={int_event_id}&invitee_id={user_id}",
         timeout=100,
     )
-    
+
     invite_event = None
     if response.status_code == 200:
         invite_event = response.json()[0]

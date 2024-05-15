@@ -76,6 +76,48 @@ class Wrapper:
             return participations
         except db_exc.NoResultFound as e:
             raise ValueError(f"Participations not found: {e}") from e
+    
+    def get_participations_by_event(self, event_id: int) -> list[ParticipationModel]:
+        """Get all participations.
+
+        Args:
+            event_id (int): event id
+
+        Returns:
+            list[ParticipationModel]: list of participations based on event id
+        """
+        try:
+            participations = (
+                self.session.query(ParticipationModel)
+                .filter(ParticipationModel.event_id == event_id)
+                .all()
+            )
+            return participations
+        except db_exc.NoResultFound as e:
+            raise ValueError(f"Participations not found: {e}") from e
+        
+    def get_participations_by_user_event(
+        self, user_id: int, event_id: int
+    ) -> ParticipationModel:
+        """Get all participations.
+
+        Args:
+            user_id (int): user id
+            event_id (int): event id
+
+        Returns:
+            ParticipationModel: participation
+        """
+        try:
+            participation = (
+                self.session.query(ParticipationModel)
+                .filter(ParticipationModel.user_id == user_id)
+                .filter(ParticipationModel.event_id == event_id)
+                .one()
+            )
+            return participation
+        except db_exc.NoResultFound as e:
+            raise ValueError(f"Participation not found: {e}") from e
 
     def create_participation(
         self, user_id: int, event_id: int, status: str

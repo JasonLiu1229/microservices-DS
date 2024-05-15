@@ -48,6 +48,56 @@ def get_particpations() -> list[ParticipationReturn]:
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
+@router.get("")
+def get_participations_by_event(event_id: int) -> list[ParticipationReturn]:
+    """
+    Get all participations by event.
+
+    Args:
+        event_id (int): event id
+
+    Returns:
+        list[ParticipationReturn]: list of all participations by event
+    """
+    try:
+        wrapper = Wrapper()
+        participations = wrapper.get_participations_by_event(event_id)
+        return [
+            {
+                "user_id": getattr(participation, "user_id"),
+                "event_id": getattr(participation, "event_id"),
+                "status": getattr(participation, "status"),
+                "participation_id": getattr(participation, "id"),
+            }
+            for participation in participations
+        ]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+@router.get("")
+def get_participations_by_user_event(user_id: int, event_id: int) -> ParticipationReturn:
+    """
+    Get participation by user and event.
+
+    Args:
+        user_id (int): user id
+        event_id (int): event id
+
+    Returns:
+        ParticipationReturn: participation
+    """
+    try:
+        wrapper = Wrapper()
+        participation = wrapper.get_participations_by_user_event(user_id=user_id, event_id=event_id)
+        return {
+            "user_id": getattr(participation, "user_id"),
+            "event_id": getattr(participation, "event_id"),
+            "status": getattr(participation, "status"),
+            "participation_id": getattr(participation, "id"),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
 @router.get("/{participation_id}")
 def get_participation(participation_id: int) -> ParticipationReturn:
     """
