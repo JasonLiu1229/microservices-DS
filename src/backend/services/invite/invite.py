@@ -26,30 +26,6 @@ class InviteReturn(BaseModel):
     invite_id: int
 
 
-@router.get("")
-def get_invites() -> list[InviteReturn]:
-    """get all invites.
-
-    Returns:
-        list[InviteReturn]: list of all invites
-    """
-    try:
-        wrapper = Wrapper()
-        invites = wrapper.get_all_invitations()
-        return [
-            {
-                "user_id": getattr(invite, "user_id"),
-                "event_id": getattr(invite, "event_id"),
-                "invitee_id": getattr(invite, "invitee_id"),
-                "status": getattr(invite, "status"),
-                "invite_id": getattr(invite, "id"),
-            }
-            for invite in invites
-        ]
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) from e
-
-
 @router.get("/{invite_id}")
 def get_invite(invite_id: int) -> InviteReturn:
     """Get invite.
@@ -72,8 +48,28 @@ def get_invite(invite_id: int) -> InviteReturn:
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
+def get_invites() -> list[InviteReturn]:
+    """get all invites.
 
-@router.get("")
+    Returns:
+        list[InviteReturn]: list of all invites
+    """
+    try:
+        wrapper = Wrapper()
+        invites = wrapper.get_all_invitations()
+        return [
+            {
+                "user_id": getattr(invite, "user_id"),
+                "event_id": getattr(invite, "event_id"),
+                "invitee_id": getattr(invite, "invitee_id"),
+                "status": getattr(invite, "status"),
+                "invite_id": getattr(invite, "id"),
+            }
+            for invite in invites
+        ]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
 def get_invitations_user(user_id: int) -> list[InviteReturn]:
     """Get all invitations.
 
@@ -104,7 +100,6 @@ def get_invitations_user(user_id: int) -> list[InviteReturn]:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
-@router.get("")
 def get_invitations_event(event_id: int) -> list[InviteReturn]:
     """Get all invitations.
 
@@ -135,7 +130,6 @@ def get_invitations_event(event_id: int) -> list[InviteReturn]:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
-@router.get("")
 def get_invitations_user_event(invitee_id: int, event_id: int) -> InviteReturn:
     """Get all invitations.
 
@@ -165,6 +159,30 @@ def get_invitations_user_event(invitee_id: int, event_id: int) -> InviteReturn:
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
+
+@router.get("")
+def get_invites_route(
+    user_id: int = Query(None, description="user id", required=False),
+    event_id: int = Query(None, description="event id", required=False),
+) -> list[InviteReturn]:
+    """
+    Get all invites.
+
+    Args:
+        user_id (int): user id
+        event_id (int): event id
+
+    Returns:
+        list[InviteReturn]: list of all invites
+    """
+    if user_id is not None and event_id is not None:
+        return [get_invitations_user_event(user_id, event_id)]
+    elif user_id is not None:
+        return get_invitations_user(user_id)
+    elif event_id is not None:
+        return get_invitations_event(event_id)
+    else:
+        return get_invites()
 
 
 @router.put("/{invite_id}/status/{status}")

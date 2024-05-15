@@ -128,9 +128,9 @@ def process_public_event() -> Response:
     )
     
     if invites_output_response.status_code != 200:
-        return redirect("/")
-    
-    invites_output = invites_output_response.json()
+        invites_output = []
+    else:
+        invites_output = invites_output_response.json()
 
     if len(invites_output) > 0:
         invite = invites_output[0]
@@ -156,9 +156,9 @@ def process_public_event() -> Response:
         )
         
         if participations_output_response.status_code != 200:
-            return redirect("/")
-        
-        participations_output = participations_output_response.json()
+            participations_output = []
+        else:
+            participations_output = participations_output_response.json()
 
         if len(participations_output) == 0:
             requests.post(
@@ -177,7 +177,7 @@ def process_public_event() -> Response:
                     timeout=100,
                 )
 
-    return redirect("/")
+    return redirect("/", code=307)
 
 
 @app.route("/event", methods=["POST"])
@@ -636,6 +636,10 @@ def process_invite() -> Response:
     )
 
     if invite_event is not None:
+        
+        if invite_event["status"] != "pending":
+            return redirect("/invites")
+        
         requests.put(
             f"http://backend-invitations:8000/invitations/{invite_event['invite_id']}/status/{new_status}",
             timeout=100,
@@ -646,7 +650,7 @@ def process_invite() -> Response:
             timeout=100,
         )
 
-    return redirect("/invites")
+    return redirect("/invites", code=307)
 
 
 @app.route("/logout")

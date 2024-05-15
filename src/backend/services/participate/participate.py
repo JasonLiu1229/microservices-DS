@@ -1,6 +1,6 @@
 # Imports
 import httpx
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, HTTPException, Query, Response
 from pydantic import BaseModel
 
 from wrapper import Wrapper
@@ -25,7 +25,6 @@ class ParticipationReturn(BaseModel):
     participation_id: int
 
 
-@router.get("")
 def get_particpations() -> list[ParticipationReturn]:
     """
     Get all participations.
@@ -48,7 +47,7 @@ def get_particpations() -> list[ParticipationReturn]:
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
-@router.get("")
+
 def get_participations_by_event(event_id: int) -> list[ParticipationReturn]:
     """
     Get all participations by event.
@@ -74,8 +73,10 @@ def get_participations_by_event(event_id: int) -> list[ParticipationReturn]:
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
-@router.get("")
-def get_participations_by_user_event(user_id: int, event_id: int) -> ParticipationReturn:
+
+def get_participations_by_user_event(
+    user_id: int, event_id: int
+) -> ParticipationReturn:
     """
     Get participation by user and event.
 
@@ -88,7 +89,9 @@ def get_participations_by_user_event(user_id: int, event_id: int) -> Participati
     """
     try:
         wrapper = Wrapper()
-        participation = wrapper.get_participations_by_user_event(user_id=user_id, event_id=event_id)
+        participation = wrapper.get_participations_by_user_event(
+            user_id=user_id, event_id=event_id
+        )
         return {
             "user_id": getattr(participation, "user_id"),
             "event_id": getattr(participation, "event_id"),
@@ -97,6 +100,29 @@ def get_participations_by_user_event(user_id: int, event_id: int) -> Participati
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@router.get("")
+def get_participations_route(
+    user_id: int = Query(default=None), event_id: int = Query(default=None)
+) -> list[ParticipationReturn]:
+    """
+    Get all participations.
+
+    Args:
+        user_id (int): user id
+        event_id (int): event id
+
+    Returns:
+        list[ParticipationReturn]: list of all participations
+    """
+    if user_id is not None and event_id is not None:
+        return [get_participations_by_user_event(user_id, event_id)]
+    elif event_id is not None:
+        return get_participations_by_event(event_id)
+    else:
+        return get_particpations()
+
 
 @router.get("/{participation_id}")
 def get_participation(participation_id: int) -> ParticipationReturn:
@@ -120,6 +146,7 @@ def get_participation(participation_id: int) -> ParticipationReturn:
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
+
 
 @router.post("")
 def create_participation(participation: Participation) -> ParticipationReturn:
