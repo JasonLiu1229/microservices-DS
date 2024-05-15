@@ -76,7 +76,7 @@ class Wrapper:
             share_id (int): user id of whom you sharing the calendar with
         """
         try:
-            calendar = CalendarModel(user_id=user_id, share_id=share_id)
+            calendar = CalendarModel(owner_id=user_id, shared_with_id=share_id)
             self.session.add(calendar)
             self.session.commit()
             return calendar

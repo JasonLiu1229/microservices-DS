@@ -27,7 +27,13 @@ def succesful_request(r):  # -> Any:
 
 
 def get_userId(username: str) -> int | None:
-    users = requests.get("http://backend-auth:8000/users", timeout=100).json()
+    users_response = requests.get("http://backend-auth:8000/users", timeout=100)
+    
+    if users_response.status_code != 200:
+        return None
+    
+    users = users_response.json()
+    
     for user in users:
         if user["username"] == username:
             return user["user_id"]
@@ -52,7 +58,12 @@ def home() -> str:
 
         public_events = []
 
-        events = requests.get("http://backend-events:8000/events", timeout=100).json()
+        events_response = requests.get("http://backend-events:8000/events", timeout=100)
+        
+        if events_response.status_code != 200:
+            return redirect("/")
+        
+        events = events_response.json()
 
         for event in events:
             if event["is_public"]:
@@ -65,7 +76,13 @@ def home() -> str:
                     )
                 )
 
-        users = requests.get("http://backend-auth:8000/users", timeout=100).json()
+        users_response = requests.get("http://backend-auth:8000/users", timeout=100)
+        
+        if users_response.status_code != 200:
+            return redirect("/")
+        
+        users = users_response.json()
+        
         formatted_events = []
         for event in public_events:
             for user in users:
@@ -105,10 +122,15 @@ def process_public_event() -> Response:
         return redirect("/")
     
     # check if we also have an invite for this event
-    invites_output = requests.get(
+    invites_output_response = requests.get(
         f"http://backend-invitations:8000/invitations?event_id={int_event_id}&invitee_id={user_id}",
         timeout=100,
-    ).json()
+    )
+    
+    if invites_output_response.status_code != 200:
+        return redirect("/")
+    
+    invites_output = invites_output_response.json()
 
     if len(invites_output) > 0:
         invite = invites_output[0]
@@ -128,10 +150,15 @@ def process_public_event() -> Response:
             )
     else:
         # check if we have already participated in this event
-        participations_output = requests.get(
+        participations_output_response = requests.get(
             f"http://backend-participations:8000/participations?event_id={int_event_id}&user_id={user_id}",
             timeout=100,
-        ).json()
+        )
+        
+        if participations_output_response.status_code != 200:
+            return redirect("/")
+        
+        participations_output = participations_output_response.json()
 
         if len(participations_output) == 0:
             requests.post(
@@ -167,7 +194,12 @@ def create_event() -> Response:
     #
     # Given some data, create an event and send out the invites.
     # ==========================
-    users = requests.get("http://backend-auth:8000/users", timeout=100).json()
+    users_response = requests.get("http://backend-auth:8000/users", timeout=100)
+    
+    if users_response.status_code != 200:
+        return redirect("/")
+    
+    users = users_response.json()
 
     current_user_id = None
     for user in users:
@@ -230,9 +262,14 @@ def calendar() -> str:
     calendar_user_id = get_userId(calendar_user)
     user_id = get_userId(username)
 
-    all_calendars = requests.get(
+    all_calendars_response = requests.get(
         "http://backend-calendar:8000/calendars", timeout=100
-    ).json()
+    )
+    
+    if all_calendars_response.status_code != 200:
+        return redirect("/")
+    
+    all_calendars = all_calendars_response.json()
 
     for calendar_shared in all_calendars:
         if (
@@ -243,10 +280,15 @@ def calendar() -> str:
             break
 
     if success:
-        all_participations = requests.get(
+        all_participations_response = requests.get(
             "http://backend-participations:8000/participations", timeout=100
-        ).json()
+        )
+        
+        if all_participations_response.status_code != 200:
+            return redirect("/")
 
+        all_participations = all_participations_response.json()
+        
         calendar = []
 
         for participation in all_participations:
@@ -254,14 +296,26 @@ def calendar() -> str:
                 participation["user_id"] == calendar_user_id
                 and participation["status"] != "declined"
             ):
-                event = requests.get(
+                event_response = requests.get(
                     f"http://backend-events:8000/events/{participation['event_id']}",
                     timeout=100,
-                ).json()
-                organizer = requests.get(
+                )
+                
+                if event_response.status_code != 200:
+                    continue
+                
+                event = event_response.json()
+                
+                organizer_response = requests.get(
                     f"http://backend-auth:8000/users/{event['organizer_id']}",
                     timeout=100,
-                ).json()
+                )
+                
+                if organizer_response.status_code != 200:
+                    continue
+                
+                organizer = organizer_response.json()
+                
                 status = "Going" if participation["status"] == "accepted" else "Maybe"
                 is_public = "Public" if event["is_public"] else "Private"
                 string_date = event["date"].split("T")[0]
@@ -309,10 +363,14 @@ def share() -> str:
 
     success = False
     user_id = get_userId(username)
+    shared_with_id = get_userId(share_user)
+    
+    if user_id is None or shared_with_id is None:
+        return redirect("/share")
 
     response = requests.post(
         "http://backend-calendar:8000/calendars",
-        json={"user_id": user_id, "shared_with_id": share_user},
+        json={"user_id": user_id, "shared_with_id": shared_with_id},
         timeout=100,
     )
 
@@ -354,35 +412,50 @@ def view_event(eventid) -> str:
             success = True
 
     if success:
-        all_participants = requests.get(
+        all_participants_response = requests.get(
             "http://backend-participations:8000/participations", timeout=100
-        ).json()
+        )
+        
+        if all_participants_response.status_code != 200:
+            return redirect("/")
+        
+        all_participants = all_participants_response.json()
 
         event_participants = []
 
         for participants in all_participants:
             if participants["event_id"] == int_event_id:
                 event_participants.append(participants)
-
-        event_participants = [
-            (
-                requests.get(
-                    f"http://backend-auth:8000/users/{participant['user_id']}",
-                    timeout=100,
-                ).json()["username"],
-                (
-                    "Participating"
-                    if participant["status"] == "accepted"
-                    else "Maybe Participating"
-                ),
+        
+        new_event_participants = []
+        
+        for participant in event_participants:
+            user_response = requests.get(
+                f"http://backend-auth:8000/users/{participant['user_id']}", timeout=100
             )
-            for participant in event_participants
-            if participant["status"] != "declined"
-        ]
+            
+            if user_response.status_code != 200:
+                continue
+            
+            user = user_response.json()
+            
+            new_event_participants.append(
+                (
+                    user["username"],
+                    "Participating" if participant["status"] == "accepted" else "Maybe Participating",
+                )
+            )
+        
+        event_participants = new_event_participants
 
-        organizer = requests.get(
+        organizer_response = requests.get(
             f"http://backend-auth:8000/users/{event["organizer_id"]}", timeout=100
-        ).json()
+        )
+        
+        if organizer_response.status_code != 200:
+            return redirect("/")
+        
+        organizer = organizer_response.json()
 
         string_date = event["date"].split("T")[0]
         event = [
@@ -482,10 +555,14 @@ def invites() -> str:
 
     user_id = get_userId(username)
 
-    all_invites = requests.get(
+    response = requests.get(
         "http://backend-invitations:8000/invitations", timeout=100
-    ).json()
+    )
+    
+    if response.status_code != 200:
+        return redirect("/")
 
+    all_invites = response.json()
     user_invites = []
 
     for invite in all_invites:
@@ -494,12 +571,24 @@ def invites() -> str:
 
     for invite in user_invites:
         if invite["status"] == "pending":
-            event = requests.get(
+            event_response = requests.get(
                 f"http://backend-events:8000/events/{invite['event_id']}", timeout=100
-            ).json()
-            organizer = requests.get(
+            )
+            
+            if event_response.status_code != 200:
+                continue
+            
+            event = event_response.json()
+            
+            organizer_response = requests.get(
                 f"http://backend-auth:8000/users/{event['organizer_id']}", timeout=100
-            ).json()
+            )
+            
+            if organizer_response.status_code != 200:
+                continue
+            
+            organizer = organizer_response.json()
+            
             my_invites.append(
                 (
                     event["event_id"],
@@ -534,8 +623,11 @@ def process_invite() -> Response:
     )
 
     invite_event = None
+    
     if response.status_code == 200:
         invite_event = response.json()[0]
+    else:
+        return redirect("/invites")
 
     new_status = (
         "accepted"
