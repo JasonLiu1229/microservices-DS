@@ -12,6 +12,11 @@ services:
       - 8005:8000
     networks:
       - middleman-frontend
+      - middleman-backend-auth
+      - middleman-backend-calendar
+      - middleman-backend-events
+      - middleman-backend-invitations
+      - middleman-backend-participations
     healthcheck:
       test: if [ $(curl -LI http://127.0.0.1:8005/health -o /dev/null -w '%{http_code}\n' -s) == "200" ]; then echo 0; fi || exit 1
       interval: 10s
@@ -47,6 +52,7 @@ services:
     networks:
       - host
       - db-users
+      - middleman-backend-auth
     healthcheck:
       test: if [ $(curl -LI http://127.0.0.1:8000/health -o /dev/null -w '%{http_code}\n' -s) == "200" ]; then echo 0; fi || exit 1
       interval: 10s
@@ -80,6 +86,7 @@ services:
     networks:
       - host
       - db-calendar_shares
+      - middleman-backend-calendar
     healthcheck:
       test: if [ $(curl -LI http://127.0.0.1:8001/health -o /dev/null -w '%{http_code}\n' -s) == "200" ]; then echo 0; fi || exit 1
       interval: 10s
@@ -113,6 +120,7 @@ services:
     networks:
       - host
       - db-events
+      - middleman-backend-events
     healthcheck:
       test: if [ $(curl -LI http://127.0.0.1:8002/health -o /dev/null -w '%{http_code}\n' -s) == "200" ]; then echo 0; fi || exit 1
       interval: 10s
@@ -146,6 +154,7 @@ services:
     networks:
       - host
       - db-invitations
+      - middleman-backend-invitations
     healthcheck:
       test: if [ $(curl -LI http://127.0.0.1:8003/health -o /dev/null -w '%{http_code}\n' -s) == "200" ]; then echo 0; fi || exit 1
       interval: 10s
@@ -179,6 +188,7 @@ services:
     networks:
       - host
       - db-participations
+      - middleman-backend-participations
     healthcheck:
       test: if [ $(curl -LI http://127.0.0.1:8004/health -o /dev/null -w '%{http_code}\n' -s) == "200" ]; then echo 0; fi || exit 1
       interval: 10s
@@ -351,12 +361,22 @@ services:
 
 networks:
   host: {}
-  db-users: {}
-  db-events: {}
-  db-invitations: {}
-  db-participations: {}
-  db-calendar_shares: {}
+  db-users: 
+    internal: true
+  db-events: 
+    internal: true
+  db-invitations: 
+    internal: true
+  db-participations: 
+    internal: true
+  db-calendar_shares: 
+    internal: true
   middleman-frontend: {}
+  middleman-backend-auth: {}
+  middleman-backend-calendar: {}
+  middleman-backend-events: {}
+  middleman-backend-invitations: {}
+  middleman-backend-participations: {}
 
 volumes:
   db-data-users: {}
