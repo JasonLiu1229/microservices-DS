@@ -11,7 +11,7 @@ services:
     ports:
       - 8005:8000
     networks:
-      - host
+      - middleman-frontend
     healthcheck:
       test: if [ $(curl -LI http://127.0.0.1:8005/health -o /dev/null -w '%{http_code}\n' -s) == "200" ]; then echo 0; fi || exit 1
       interval: 10s
@@ -200,17 +200,7 @@ services:
       - "127.0.0.1:8080:8080"
     networks:
       - host
-    depends_on:
-      backend-auth:
-        condition: service_healthy
-      backend-calendar:
-        condition: service_healthy
-      backend-events:
-        condition: service_healthy
-      backend-invitations:
-        condition: service_healthy
-      backend-participations:
-        condition: service_healthy
+      - middleman-frontend
     develop:
       watch:
         - action: sync
@@ -344,6 +334,7 @@ networks:
   db-invitations: {}
   db-participations: {}
   db-calendar_shares: {}
+  middleman-frontend: {}
 
 volumes:
   db-data-users: {}
