@@ -10,10 +10,10 @@ app = FastAPI()
 
 app.include_router(auth_proxy.router, prefix="/auth", tags=["auth"])
 app.include_router(events_proxy.router, prefix="/events", tags=["events"])
-app.include_router(calendar_proxy.router, prefix="/calendar", tags=["calendar"])
+app.include_router(calendar_proxy.router, prefix="/calendars", tags=["calendar"])
 app.include_router(users_proxy.router, prefix="/users", tags=["users"])
 app.include_router(
-    participate_proxy.router, prefix="/participation", tags=["participation"]
+    participate_proxy.router, prefix="/participations", tags=["participation"]
 )
-app.include_router(invite_proxy.router, prefix="/invitation", tags=["invitation"])
+app.include_router(invite_proxy.router, prefix="/invitations", tags=["invitation"])
 app.include_router(healthcheck.router, prefix="/health", tags=["health_check"])

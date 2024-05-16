@@ -223,15 +223,7 @@ services:
       - host
       - middleman-frontend
     depends_on:
-      backend-auth:
-        condition: service_healthy
-      backend-calendar:
-        condition: service_healthy
-      backend-events:
-        condition: service_healthy
-      backend-invitations:
-        condition: service_healthy
-      backend-participations:
+      backend-middleman:
         condition: service_healthy
     develop:
       watch:

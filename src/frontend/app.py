@@ -27,7 +27,7 @@ def succesful_request(r):  # -> Any:
 
 
 def get_userId(username: str) -> int | None:
-    users_response = requests.get("http://backend-auth:8000/users", timeout=100)
+    users_response = requests.get("http://backend-middleman:8000/users", timeout=100)
     
     if users_response.status_code != 200:
         return None
@@ -58,7 +58,7 @@ def home() -> str:
 
         public_events = []
 
-        events_response = requests.get("http://backend-events:8000/events", timeout=100)
+        events_response = requests.get("http://backend-middleman:8000/events", timeout=100)
         
         if events_response.status_code != 200:
             return redirect("/")
@@ -76,7 +76,7 @@ def home() -> str:
                     )
                 )
 
-        users_response = requests.get("http://backend-auth:8000/users", timeout=100)
+        users_response = requests.get("http://backend-middleman:8000/users", timeout=100)
         
         if users_response.status_code != 200:
             return redirect("/")
@@ -123,7 +123,7 @@ def process_public_event() -> Response:
     
     # check if event exist
     event_response = requests.get(
-        f"http://backend-events:8000/events/{int_event_id}", timeout=100
+        f"http://backend-middleman:8000/events/{int_event_id}", timeout=100
     )
     
     if event_response.status_code != 200:
@@ -131,7 +131,7 @@ def process_public_event() -> Response:
     
     # check if we also have an invite for this event
     invites_output_response = requests.get(
-        f"http://backend-invitations:8000/invitations?event_id={int_event_id}&invitee_id={user_id}",
+        f"http://backend-middleman:8000/invitations?event_id={int_event_id}&invitee_id={user_id}",
         timeout=100,
     )
     
@@ -144,11 +144,11 @@ def process_public_event() -> Response:
         invite = invites_output[0]
         if invite["status"] == "pending":
             requests.put(
-                f"http://backend-invitations:8000/invitations/{invite['invite_id']}/status/{new_status}",
+                f"http://backend-middleman:8000/invitations/{invite['invite_id']}/status/{new_status}",
                 timeout=100,
             )
             requests.post(
-                "http://backend-participations:8000/participations",
+                "http://backend-middleman:8000/participations",
                 json={
                     "user_id": user_id,
                     "event_id": int_event_id,
@@ -159,7 +159,7 @@ def process_public_event() -> Response:
     else:
         # check if we have already participated in this event
         participations_output_response = requests.get(
-            f"http://backend-participations:8000/participations?event_id={int_event_id}&user_id={user_id}",
+            f"http://backend-middleman:8000/participations?event_id={int_event_id}&user_id={user_id}",
             timeout=100,
         )
         
@@ -170,7 +170,7 @@ def process_public_event() -> Response:
 
         if len(participations_output) == 0:
             requests.post(
-                "http://backend-participations:8000/participations",
+                "http://backend-middleman:8000/participations",
                 json={
                     "user_id": user_id,
                     "event_id": int_event_id,
@@ -181,7 +181,7 @@ def process_public_event() -> Response:
         elif len(participations_output) == 1:
             if participations_output[0]["status"] != new_status:
                 requests.put(
-                    f"http://backend-participations:8000/participations/{participations_output[0]['participation_id']}/status/{new_status}",
+                    f"http://backend-middleman:8000/participations/{participations_output[0]['participation_id']}/status/{new_status}",
                     timeout=100,
                 )
 
@@ -202,7 +202,7 @@ def create_event() -> Response:
     #
     # Given some data, create an event and send out the invites.
     # ==========================
-    users_response = requests.get("http://backend-auth:8000/users", timeout=100)
+    users_response = requests.get("http://backend-middleman:8000/users", timeout=100)
     
     if users_response.status_code != 200:
         return redirect("/")
@@ -219,7 +219,7 @@ def create_event() -> Response:
         return redirect("/")
 
     response = requests.post(
-        "http://backend-events:8000/events",
+        "http://backend-middleman:8000/events",
         json={
             "organizer_id": current_user_id,
             "title": title,
@@ -242,7 +242,7 @@ def create_event() -> Response:
 
     for user_id in users_id_invites:
         requests.post(
-            "http://backend-invitations:8000/invitations",
+            "http://backend-middleman:8000/invitations",
             json={
                 "user_id": current_user_id,
                 "event_id": event["event_id"],
@@ -274,7 +274,7 @@ def calendar() -> str:
         return redirect("/")
 
     all_calendars_response = requests.get(
-        "http://backend-calendar:8000/calendars", timeout=100
+        "http://backend-middleman:8000/calendars", timeout=100
     )
     
     if all_calendars_response.status_code != 200:
@@ -292,7 +292,7 @@ def calendar() -> str:
 
     if success:
         all_participations_response = requests.get(
-            "http://backend-participations:8000/participations", timeout=100
+            "http://backend-middleman:8000/participations", timeout=100
         )
         
         if all_participations_response.status_code != 200:
@@ -308,7 +308,7 @@ def calendar() -> str:
                 and participation["status"] != "declined"
             ):
                 event_response = requests.get(
-                    f"http://backend-events:8000/events/{participation['event_id']}",
+                    f"http://backend-middleman:8000/events/{participation['event_id']}",
                     timeout=100,
                 )
                 
@@ -318,7 +318,7 @@ def calendar() -> str:
                 event = event_response.json()
                 
                 organizer_response = requests.get(
-                    f"http://backend-auth:8000/users/{event['organizer_id']}",
+                    f"http://backend-middleman:8000/users/{event['organizer_id']}",
                     timeout=100,
                 )
                 
@@ -380,7 +380,7 @@ def share() -> str:
         return redirect("/share")
 
     response = requests.post(
-        "http://backend-calendar:8000/calendars",
+        "http://backend-middleman:8000/calendars",
         json={"user_id": user_id, "shared_with_id": shared_with_id},
         timeout=100,
     )
@@ -411,7 +411,7 @@ def view_event(eventid) -> str:
     int_event_id = int(eventid)
 
     event_response = requests.get(
-        f"http://backend-events:8000/events/{int_event_id}", timeout=100
+        f"http://backend-middleman:8000/events/{int_event_id}", timeout=100
     )
     
     if event_response.status_code != 200:
@@ -423,7 +423,7 @@ def view_event(eventid) -> str:
         success = True
     else:
         invites_output_response = requests.get(
-            f"http://backend-invitations:8000/invitations?event_id={int_event_id}&invitee_id={user_id}",
+            f"http://backend-middleman:8000/invitations?event_id={int_event_id}&invitee_id={user_id}",
             timeout=100,
         )
         
@@ -437,7 +437,7 @@ def view_event(eventid) -> str:
 
     if success:
         all_participants_response = requests.get(
-            "http://backend-participations:8000/participations", timeout=100
+            "http://backend-middleman:8000/participations", timeout=100
         )
         
         if all_participants_response.status_code != 200:
@@ -455,7 +455,7 @@ def view_event(eventid) -> str:
         
         for participant in event_participants:
             user_response = requests.get(
-                f"http://backend-auth:8000/users/{participant['user_id']}", timeout=100
+                f"http://backend-middleman:8000/users/{participant['user_id']}", timeout=100
             )
             
             if user_response.status_code != 200:
@@ -473,7 +473,7 @@ def view_event(eventid) -> str:
         event_participants = new_event_participants
 
         organizer_response = requests.get(
-            f"http://backend-auth:8000/users/{event["organizer_id"]}", timeout=100
+            f"http://backend-middleman:8000/users/{event["organizer_id"]}", timeout=100
         )
         
         if organizer_response.status_code != 200:
@@ -510,7 +510,7 @@ def login() -> Response:
     # ================================
     if (
         requests.post(
-            "http://backend-auth:8000/auth/login",
+            "http://backend-middleman:8000/auth/login",
             json={"username": req_username, "password": req_password},
             timeout=100,
         ).status_code
@@ -546,7 +546,7 @@ def register() -> Response:
 
     if (
         requests.post(
-            "http://backend-auth:8000/auth/register",
+            "http://backend-middleman:8000/auth/register",
             json={"username": req_username, "password": req_password},
             timeout=100,
         ).status_code
@@ -583,7 +583,7 @@ def invites() -> str:
         return redirect("/", code=404)
 
     response = requests.get(
-        "http://backend-invitations:8000/invitations", timeout=100
+        "http://backend-middleman:8000/invitations", timeout=100
     )
     
     if response.status_code != 200:
@@ -599,7 +599,7 @@ def invites() -> str:
     for invite in user_invites:
         if invite["status"] == "pending":
             event_response = requests.get(
-                f"http://backend-events:8000/events/{invite['event_id']}", timeout=100
+                f"http://backend-middleman:8000/events/{invite['event_id']}", timeout=100
             )
             
             if event_response.status_code != 200:
@@ -608,7 +608,7 @@ def invites() -> str:
             event = event_response.json()
             
             organizer_response = requests.get(
-                f"http://backend-auth:8000/users/{event['organizer_id']}", timeout=100
+                f"http://backend-middleman:8000/users/{event['organizer_id']}", timeout=100
             )
             
             if organizer_response.status_code != 200:
@@ -650,14 +650,14 @@ def process_invite() -> Response:
     
     # check if event exist
     event_response = requests.get(
-        f"http://backend-events:8000/events/{int_event_id}", timeout=100
+        f"http://backend-middleman:8000/events/{int_event_id}", timeout=100
     )
     
     if event_response.status_code != 200:
         return redirect("/", code=event_response.status_code)
 
     response = requests.get(
-        f"http://backend-invitations:8000/invitations?event_id={int_event_id}&invitee_id={user_id}",
+        f"http://backend-middleman:8000/invitations?event_id={int_event_id}&invitee_id={user_id}",
         timeout=100,
     )
 
@@ -680,11 +680,11 @@ def process_invite() -> Response:
             return redirect("/invites")
         
         requests.put(
-            f"http://backend-invitations:8000/invitations/{invite_event['invite_id']}/status/{new_status}",
+            f"http://backend-middleman:8000/invitations/{invite_event['invite_id']}/status/{new_status}",
             timeout=100,
         )
         requests.post(
-            "http://backend-participations:8000/participations",
+            "http://backend-middleman:8000/participations",
             json={"user_id": user_id, "event_id": int_event_id, "status": new_status},
             timeout=100,
         )
