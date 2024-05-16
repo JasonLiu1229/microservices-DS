@@ -201,6 +201,17 @@ services:
     networks:
       - host
       - middleman-frontend
+    depends_on:
+      backend-auth:
+        condition: service_healthy
+      backend-calendar:
+        condition: service_healthy
+      backend-events:
+        condition: service_healthy
+      backend-invitations:
+        condition: service_healthy
+      backend-participations:
+        condition: service_healthy
     develop:
       watch:
         - action: sync
