@@ -83,3 +83,41 @@ class Wrapper:
         except db_exc.OperationalError as e:
             self.session.rollback()
             raise ValueError(f"Failed to share calendar: {e}") from e
+
+    def get_calendars_owner(self, user_id: int) -> list[CalendarModel]:
+        """Get all calendars owned by user.
+
+        Args:
+            user_id (int): user id
+
+        Returns:
+            list[CalendarModel]: list of calendars owned by user
+        """
+        try:
+            calendars = (
+                self.session.query(CalendarModel)
+                .filter(CalendarModel.owner_id == user_id)
+                .all()
+            )
+            return calendars
+        except db_exc.NoResultFound as e:
+            raise ValueError(f"Calendars not found: {e}") from e
+    
+    def get_calendars_shared_with(self, user_id: int) -> list[CalendarModel]:
+        """Get all calendars shared with user.
+
+        Args:
+            user_id (int): user id
+
+        Returns:
+            list[CalendarModel]: list of calendars shared with user
+        """
+        try:
+            calendars = (
+                self.session.query(CalendarModel)
+                .filter(CalendarModel.shared_with_id == user_id)
+                .all()
+            )
+            return calendars
+        except db_exc.NoResultFound as e:
+            raise ValueError(f"Calendars not found: {e}") from e

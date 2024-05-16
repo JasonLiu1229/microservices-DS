@@ -163,14 +163,13 @@ def get_invites_route(
     Returns:
         list[InviteReturn]: list of all invites
     """
-    if user_id is not None and event_id is not None:
+    if user_id and event_id:
         return [get_invitations_user_event(user_id, event_id)]
-    elif user_id is not None:
+    elif user_id:
         return get_invitations_user(user_id)
-    elif event_id is not None:
+    elif event_id:
         return get_invitations_event(event_id)
-    else:
-        return get_invites()
+    return get_invites()
 
 
 @router.put("/{invite_id}/status/{status}")

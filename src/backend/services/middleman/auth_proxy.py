@@ -24,7 +24,14 @@ def login(user: UserModel) -> Response:
     Returns:
         Response: status code 200
     """
-    return Response(status_code=200)
+    response = httpx.post(
+        "http://backend-auth:8000/login",
+        json={"username": user.username, "password": user.password},
+    )
+    if response.status_code == 200:
+        return response
+    else:
+        raise HTTPException(status_code=response.status_code, detail=response.text)
 
 
 @router.post("/register")
@@ -37,4 +44,11 @@ def register(user: UserModel) -> Response:
     Returns:
         Response: status code 200
     """
-    return Response(status_code=200)
+    response = httpx.post(
+        "http://backend-auth:8000/register",
+        json={"username": user.username, "password": user.password},
+    )
+    if response.status_code == 200:
+        return response
+    else:
+        raise HTTPException(status_code=response.status_code, detail=response.text)

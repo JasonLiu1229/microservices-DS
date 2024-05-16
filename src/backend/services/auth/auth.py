@@ -24,7 +24,7 @@ class UserModel(BaseModel):
 
 # Routes
 @router.post("/login")
-def login_for_access_token(user: UserModel) -> Response:
+def login(user: UserModel) -> Response:
     """Login endpoint for users to authenticate.
 
     Args:

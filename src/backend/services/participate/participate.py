@@ -1,5 +1,4 @@
 # Imports
-import httpx
 from fastapi import APIRouter, HTTPException, Query, Response
 from pydantic import BaseModel
 
