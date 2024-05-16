@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# Auth
+# Middleman
 FROM python:3.12-rc-slim-buster
 
 WORKDIR /app/backend

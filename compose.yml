@@ -1,6 +1,29 @@
 name: microservices-ds
 
 services:
+  backend-middleman:
+    container_name: microservices-backend-middleman
+    hostname: backend
+    build:
+      context: ./src/backend/services/middleman
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - 8005:8000
+    networks:
+      - host
+    healthcheck:
+      test: if [ $(curl -LI http://127.0.0.1:8005/health -o /dev/null -w '%{http_code}\n' -s) == "200" ]; then echo 0; fi || exit 1
+      interval: 10s
+      timeout: 5s
+      start_period: 60s
+      retries: 5
+    develop:
+      watch:
+        - action: sync
+          path: ./src/backend/services/middleman
+          target: /app/backend
+
   backend-auth:
     container_name: microservices-backend-auth
     hostname: backend

@@ -24,7 +24,7 @@ class UserModel(BaseModel):
 
 # Routes
 @router.post("/login")
-async def login_for_access_token(user: UserModel) -> Response:
+def login_for_access_token(user: UserModel) -> Response:
     """Login endpoint for users to authenticate.
 
     Args:
@@ -50,7 +50,7 @@ async def login_for_access_token(user: UserModel) -> Response:
 
 
 @router.post("/register")
-async def register(user: UserModel) -> Response:
+def register(user: UserModel) -> Response:
     """Register endpoint for users to create an account.
 
     Args:
