@@ -50,7 +50,6 @@ services:
     ports:
       - 8000:8000
     networks:
-      - host
       - db-users
       - middleman-backend-auth
     healthcheck:
@@ -84,7 +83,6 @@ services:
     ports:
       - 8001:8000
     networks:
-      - host
       - db-calendar_shares
       - middleman-backend-calendar
     healthcheck:
@@ -118,7 +116,6 @@ services:
     ports:
       - 8002:8000
     networks:
-      - host
       - db-events
       - middleman-backend-events
     healthcheck:
@@ -152,7 +149,6 @@ services:
     ports:
       - 8003:8000
     networks:
-      - host
       - db-invitations
       - middleman-backend-invitations
     healthcheck:
@@ -220,7 +216,6 @@ services:
     ports:
       - "127.0.0.1:8080:8080"
     networks:
-      - host
       - middleman-frontend
     depends_on:
       backend-middleman:

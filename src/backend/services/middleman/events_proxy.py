@@ -23,7 +23,7 @@ class EventReturn(BaseModel):
     organizer_id: int
     title: str
     description: str
-    date: datetime
+    date: str
     is_public: bool
     event_id: int
 
@@ -57,7 +57,6 @@ def get_event(event_id: int) -> EventReturn:
     else:
         raise HTTPException(status_code=response.status_code, detail=response.text)
 
-
 @router.post("")
 def create_event(event: Event) -> EventReturn:
     """
@@ -78,7 +77,7 @@ def create_event(event: Event) -> EventReturn:
         "organizer_id": event.organizer_id,
         "title": event.title,
         "description": event.description,
-        "date": event.date,
+        "date": str(event.date),
         "is_public": event.is_public,
     })
     if response.status_code == 200:

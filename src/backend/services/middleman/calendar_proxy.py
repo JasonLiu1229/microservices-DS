@@ -24,7 +24,7 @@ def get_calendars() -> list[CalendarReturn]:
     """
     Get all shared calendars.
     """
-    response = httpx.get("http://backend-calendar:8000/calendars/")
+    response = httpx.get("http://backend-calendar:8000/calendars")
     if response.status_code == 200:
         return response.json()
     else:
@@ -61,7 +61,7 @@ def create_share(calendar: Calendar) -> CalendarReturn:
     if response.status_code != 200:
         raise HTTPException(status_code=response.status_code, detail=response.text)
     
-    response = httpx.post("http://backend-calendar:8000/calendars/", json={
+    response = httpx.post("http://backend-calendar:8000/calendars", json={
         "user_id": calendar.user_id,
         "shared_with_id": calendar.shared_with_id
     })

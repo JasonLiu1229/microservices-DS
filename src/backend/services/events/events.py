@@ -28,7 +28,7 @@ class EventReturn(BaseModel):
     organizer_id: int
     title: str
     description: str
-    date: datetime
+    date: str
     is_public: bool
     event_id: int
 
@@ -46,7 +46,7 @@ def event_parser(event: EventModel) -> dict:
         "organizer_id": getattr(event, "organizer_id"),
         "title": getattr(event, "title"),
         "description": getattr(event, "description"),
-        "date": getattr(event, "date"),
+        "date": str(getattr(event, "date")),
         "is_public": getattr(event, "is_public"),
         "event_id": getattr(event, "id"),
     }

@@ -25,11 +25,11 @@ def login(user: UserModel) -> Response:
         Response: status code 200
     """
     response = httpx.post(
-        "http://backend-auth:8000/login",
+        "http://backend-auth:8000/auth/login",
         json={"username": user.username, "password": user.password},
     )
     if response.status_code == 200:
-        return response
+        return Response(status_code=200)
     else:
         raise HTTPException(status_code=response.status_code, detail=response.text)
 
@@ -45,10 +45,10 @@ def register(user: UserModel) -> Response:
         Response: status code 200
     """
     response = httpx.post(
-        "http://backend-auth:8000/register",
+        "http://backend-auth:8000/auth/register",
         json={"username": user.username, "password": user.password},
     )
     if response.status_code == 200:
-        return response
+        return Response(status_code=200)
     else:
         raise HTTPException(status_code=response.status_code, detail=response.text)
