@@ -88,6 +88,9 @@ def create_participation(participation: Participation) -> ParticipationReturn:
 
     Args:
         participation (Participation): participation
+        
+    HTTPExceptions:
+        400: Participation already exists
 
     Returns:
         ParticipationReturn: participation
@@ -100,6 +103,13 @@ def create_participation(participation: Participation) -> ParticipationReturn:
     response = httpx.get(f"http://backend-events:8000/events/{participation.event_id}")
     if response.status_code != 200:
         raise HTTPException(status_code=response.status_code, detail=response.text)
+    
+    # Check if participation already exists
+    response = httpx.get(f"http://backend-participations:8000/participations?user_id={participation.user_id}&event_id={participation.event_id}")
+    if response.status_code == 200:
+        participations = response.json()
+        if participations:
+            raise HTTPException(status_code=400, detail="Participation already exists")
     
     response = httpx.post("http://backend-participations:8000/participations", json={
         "user_id": participation.user_id,

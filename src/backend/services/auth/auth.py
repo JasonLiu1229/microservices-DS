@@ -29,6 +29,11 @@ def login(user: UserModel) -> Response:
 
     Args:
         User (UserModel): User model, so basic user information needed to authenticate.
+        
+    HttpExceptions:
+        401: Unauthorized
+        404: Not found
+        400: Bad request
 
     Returns:
         Response: status code 200
@@ -55,6 +60,9 @@ def register(user: UserModel) -> Response:
 
     Args:
         user (UserModel): User model, so basic user information needed to create an account.
+    
+    HttpExceptions:
+        400: Bad request
 
     Returns:
         Response: status code 200

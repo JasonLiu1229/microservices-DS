@@ -56,6 +56,12 @@ def event_parser(event: EventModel) -> dict:
 def get_events() -> list[EventReturn]:
     """
     Get all events.
+    
+    HttpExceptions:
+        500: Internal server error
+    
+    Returns:
+        list[EventReturn]: list of all events
     """
     try:
         wrapper = Wrapper()
@@ -73,6 +79,9 @@ def get_event(event_id: int) -> EventReturn:
 
     Args:
         event_id (int): event id
+        
+    HttpExceptions:
+        500: Internal server error
 
     Returns:
         EventReturn: event
@@ -92,6 +101,9 @@ def create_event(event: Event) -> EventReturn:
 
     Args:
         event (Event): event
+    
+    HttpExceptions:
+        500: Internal server error
 
     Returns:
         EventReturn: event

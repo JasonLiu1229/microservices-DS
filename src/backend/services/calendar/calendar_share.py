@@ -27,6 +27,12 @@ class CalendarReturn(BaseModel):
 def get_calendars() -> list[CalendarReturn]:
     """
     Get all shared calendars.
+    
+    HttpExceptions:
+        500: Internal server error
+    
+    Returns:
+        list[CalendarReturn]: list of all shared calendars
     """
     try:
         wrapper = Wrapper()
@@ -47,6 +53,15 @@ def get_calendars() -> list[CalendarReturn]:
 def get_calendar(calendar_id: int) -> CalendarReturn:
     """
     Get shared calendar.
+    
+    Args:
+        calendar_id (int): calendar id
+    
+    HttpExceptions:
+        500: Internal server error
+        
+    Returns:
+        CalendarReturn: shared calendar
     """
     try:
         calendar = Wrapper().get_calendar(calendar_id)
@@ -63,6 +78,15 @@ def get_calendar(calendar_id: int) -> CalendarReturn:
 def create_share(calendar: Calendar) -> CalendarReturn:
     """
     Share calendar.
+    
+    Args:
+        calendar (Calendar): calendar
+        
+    HttpExceptions:
+        500: Internal server error
+        
+    Returns:
+        CalendarReturn: shared calendar
     """
     try:
         wrapper = Wrapper()

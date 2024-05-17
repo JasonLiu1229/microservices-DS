@@ -159,17 +159,23 @@ def get_invites_route(
     Args:
         user_id (int): user id
         event_id (int): event id
+    
+    HttpExceptions:
+        500: Internal server error
 
     Returns:
         list[InviteReturn]: list of all invites
     """
-    if user_id and event_id:
-        return [get_invitations_user_event(user_id, event_id)]
-    elif user_id:
-        return get_invitations_user(user_id)
-    elif event_id:
-        return get_invitations_event(event_id)
-    return get_invites()
+    try:
+        if user_id and event_id:
+            return [get_invitations_user_event(user_id, event_id)]
+        elif user_id:
+            return get_invitations_user(user_id)
+        elif event_id:
+            return get_invitations_event(event_id)
+        return get_invites()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.put("/{invite_id}/status/{status}")
@@ -181,6 +187,9 @@ def update_invite_status(invite_id: int, status: str) -> None:
         invite_id (int): invite id
         status (str): invite status, can be "pending", "accepted", "declined" or "maybe"
         user_id (int): user id
+    
+    HttpExceptions:
+        500: Internal server error
     """
     try:
         wrapper = Wrapper()
@@ -197,6 +206,9 @@ def create_invite(invite: Invite) -> InviteReturn:
 
     Args:
         invite (Invite): invite
+    
+    HttpExceptions:
+        500: Internal server error
 
     Returns:
         InviteReturn: invite

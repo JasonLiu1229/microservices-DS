@@ -231,6 +231,9 @@ def create_event() -> Response:
     )
 
     users_invites = invites.split(sep=";")
+    
+    # remove duplicates
+    users_invites = list(dict.fromkeys(users_invites))
 
     users_id_invites = []
 
@@ -454,6 +457,8 @@ def view_event(eventid) -> str:
         new_event_participants = []
         
         for participant in event_participants:
+            if participant["status"] == "declined":
+                continue
             user_response = requests.get(
                 f"http://backend-middleman:8000/users/{participant['user_id']}", timeout=100
             )

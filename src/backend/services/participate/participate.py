@@ -27,6 +27,9 @@ class ParticipationReturn(BaseModel):
 def get_particpations() -> list[ParticipationReturn]:
     """
     Get all participations.
+    
+    HttpExceptions:
+        500: Internal server error
 
     Returns:
         list[ParticipationReturn]: list of all participations
@@ -53,6 +56,9 @@ def get_participations_by_event(event_id: int) -> list[ParticipationReturn]:
 
     Args:
         event_id (int): event id
+    
+    HttpExceptions:
+        500: Internal server error
 
     Returns:
         list[ParticipationReturn]: list of all participations by event
@@ -82,6 +88,9 @@ def get_participations_by_user_event(
     Args:
         user_id (int): user id
         event_id (int): event id
+    
+    HttpExceptions:
+        500: Internal server error
 
     Returns:
         ParticipationReturn: participation
@@ -111,16 +120,22 @@ def get_participations_route(
     Args:
         user_id (int): user id
         event_id (int): event id
+    
+    HttpExceptions:
+        500: Internal server error
 
     Returns:
         list[ParticipationReturn]: list of all participations
     """
-    if user_id is not None and event_id is not None:
-        return [get_participations_by_user_event(user_id, event_id)]
-    elif event_id is not None:
-        return get_participations_by_event(event_id)
-    else:
-        return get_particpations()
+    try:
+        if user_id is not None and event_id is not None:
+            return [get_participations_by_user_event(user_id, event_id)]
+        elif event_id is not None:
+            return get_participations_by_event(event_id)
+        else:
+            return get_particpations()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/{participation_id}")
@@ -130,6 +145,9 @@ def get_participation(participation_id: int) -> ParticipationReturn:
 
     Args:
         participation_id (int): participation id
+    
+    HttpExceptions:
+        500: Internal server error
 
     Returns:
         ParticipationReturn: participation
@@ -154,6 +172,9 @@ def create_participation(participation: Participation) -> ParticipationReturn:
 
     Args:
         participation (Participation): participation
+    
+    HttpExceptions:
+        500: Internal server error
 
     Returns:
         ParticipationReturn: participation
@@ -183,6 +204,9 @@ def update_participation_status(participation_id: int, status: str) -> None:
     Args:
         participation_id (int): participation id
         status (str): participation status, can be "accepted", "declined" or "maybe"
+        
+    HttpExceptions:
+        500: Internal server error
     """
     try:
         wrapper = Wrapper()
